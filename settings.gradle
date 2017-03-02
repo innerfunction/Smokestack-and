@@ -1,0 +1,4 @@
+include ':app', ':scffld', ':atableview', ':smokestack'
+project(':scffld').projectDir = new File('SCFFLD/SCFFLD')
+project(':atableview').projectDir = new File('SCFFLD/SCFFLD/atableview')
+project(':smokestack').projectDir = new File('Smokestack')

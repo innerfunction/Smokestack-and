@@ -1,0 +1,3 @@
+[submodule "SCFFLD"]
+	path = SCFFLD
+	url = git@github.com:innerfunction/SCFFLD-and.git
