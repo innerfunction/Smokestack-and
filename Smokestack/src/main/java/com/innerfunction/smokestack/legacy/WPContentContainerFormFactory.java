@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
-package com.innerfunction.smokestack.content;
+package com.innerfunction.smokestack.legacy;
 
 import android.net.Uri;
 
@@ -20,7 +20,7 @@ import com.innerfunction.scffld.Container;
 import com.innerfunction.scffld.IOCObjectFactoryBase;
 import com.innerfunction.scffld.app.AppContainer;
 import com.innerfunction.scffld.app.ViewControllerBehaviour;
-import com.innerfunction.smokestack.content.ui.WPContentLoginBehaviour;
+import com.innerfunction.smokestack.legacy.ui.WPContentLoginBehaviour;
 import com.innerfunction.smokestack.form.FormView;
 import com.innerfunction.smokestack.form.FormViewController;
 import com.innerfunction.util.KeyPath;

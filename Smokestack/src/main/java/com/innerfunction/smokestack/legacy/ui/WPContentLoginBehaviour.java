@@ -1,10 +1,10 @@
-package com.innerfunction.smokestack.content.ui;
+package com.innerfunction.smokestack.legacy.ui;
 
 import com.innerfunction.scffld.Message;
 import com.innerfunction.scffld.app.AppContainer;
 import com.innerfunction.scffld.app.ViewController;
 import com.innerfunction.scffld.app.ViewControllerBehaviour;
-import com.innerfunction.smokestack.content.WPContentContainer;
+import com.innerfunction.smokestack.legacy.WPContentContainer;
 
 /**
  * A view behaviour which checks whether a user is currently logged into the app.

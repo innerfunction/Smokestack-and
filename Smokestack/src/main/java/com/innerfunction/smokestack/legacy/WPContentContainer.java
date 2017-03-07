@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
-package com.innerfunction.smokestack.content;
+package com.innerfunction.smokestack.legacy;
 
 import android.content.Context;
 import android.os.Handler;
@@ -28,6 +28,9 @@ import com.innerfunction.scffld.MessageReceiver;
 import com.innerfunction.scffld.app.AppContainer;
 import com.innerfunction.scffld.app.NamedScheme;
 import com.innerfunction.smokestack.commands.CommandScheduler;
+import com.innerfunction.smokestack.content.DataFormatter;
+import com.innerfunction.smokestack.content.DownloadZipCommand;
+import com.innerfunction.smokestack.content.GetURLCommand;
 import com.innerfunction.smokestack.db.DB;
 import com.innerfunction.smokestack.db.DBFilter;
 import com.innerfunction.uri.StandardURIHandler;

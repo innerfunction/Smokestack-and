@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
-package com.innerfunction.smokestack.content.ui;
+package com.innerfunction.smokestack.legacy.ui;
 
 import com.innerfunction.scffld.Message;
 import com.innerfunction.scffld.app.AppContainer;
 import com.innerfunction.scffld.app.ViewController;
 import com.innerfunction.scffld.app.ViewControllerBehaviour;
-import com.innerfunction.smokestack.content.WPAuthManager;
+import com.innerfunction.smokestack.legacy.WPAuthManager;
 import com.innerfunction.util.UserDefaults;
 
 /**

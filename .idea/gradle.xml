@@ -10,7 +10,6 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/SCFFLD/SCFFLD" />
-            <option value="$PROJECT_DIR$/SCFFLD/SCFFLD/atableview" />
             <option value="$PROJECT_DIR$/Smokestack" />
             <option value="$PROJECT_DIR$/app" />
           </set>
