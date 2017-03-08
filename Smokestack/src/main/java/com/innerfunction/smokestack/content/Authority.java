@@ -29,6 +29,18 @@ import java.util.Map;
  */
 public interface Authority {
 
+    /** A path for temporarily staging downloaded content. */
+    String getStagingPath();
+
+    /** A path for caching app content. */
+    String getAppCachePath();
+
+    /** A property for caching downloaded content. */
+    String getContentCachePath();
+
+    /** A path for CMS content that has been packaged with the app. */
+    String getPackagedContentPath();
+
     /**
      * Set the content provider using this authority.
      * Allows access to standard configuration settings and the command scheduler.

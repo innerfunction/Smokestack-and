@@ -30,13 +30,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- /**
  * An abstract content authority.
  * This class provides standard functionality needed to service requests from the different
  * content URL and resolver subsystems and the content internal URI scheme.
- * All requests are forwarded to the writeResponse(..) method, and subclasses should provide an
- * implementation of this method which resolves content data in an appropriate way for the
- * authority.
+ *
+ * All requests are forwarded to the writeResponse(..) method, which in turn looks up a PathRoot
+ * object for the request path and delegates the request to that.
+ *
+ * Subclasses must provide an implementation of the refreshContent() method suitable for their
+ * data source.
  *
  * Created by juliangoacher on 08/03/2017.
  */
@@ -54,7 +56,7 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
      * A map of addressable path roots.
      * For example, given the path files/all, the path root is 'files'.
      */
-    private Map<String,Object> pathRoots;
+    private Map<String,PathRoot> pathRoots;
 
     public AbstractAuthority(Context context) {
         this.context = context;
@@ -65,21 +67,25 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
     }
 
     /** A path for temporarily staging downloaded content. */
+    @Override
     public String getStagingPath() {
         return Paths.join( contentProvider.getStagingPath(), authorityName );
     }
 
     /** A path for caching app content. */
+    @Override
     public String getAppCachePath() {
         return Paths.join( contentProvider.getAppCachePath(), authorityName );
     }
 
     /** A property for caching downloaded content. */
+    @Override
     public String getContentCachePath() {
         return Paths.join( contentProvider.getContentCachePath(), authorityName );
     }
 
     /** A path for CMS content that has been packaged with the app. */
+    @Override
     public String getPackagedContentPath() {
         return Paths.join( contentProvider.getPackagedContentPath(), authorityName );
     }
@@ -91,16 +97,16 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
     public abstract void refreshContent();
 
     public void writeResponse(AuthorityResponse response, String path, Map<String,Object> params) {
-        // TODO Thought this method was abstract? (check class comment)
         ContentPath contentPath = new ContentPath( path );
-        // Look-up a path root for the first path component, and if one is found then delegate the request to it.
+        // Look-up a path root for the first path component, and if one is found then delegate the
+        // request to it.
         String root = contentPath.getRoot();
-        Object pathRoot = pathRoots.get( root );
+        PathRoot pathRoot = pathRoots.get( root );
         if( pathRoot != null ) {
             // The path root only sees the rest of the path.
             contentPath = contentPath.getRest();
             // Delegate the request.
-            pathRoot.writeResponse( response, this, contentPath, params );
+            pathRoot.writeResponse( this, contentPath, params, response );
         }
         else {
             // Path not found, respond with error.
@@ -127,7 +133,7 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
             params.put( name, uri.getQueryParameter( name ) );
         }
         writeResponse( response, uri.getPath(), params );
-        return response.getFile();
+        return response.getContentFile();
     }
 
     @Override
