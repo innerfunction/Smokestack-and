@@ -18,12 +18,14 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import com.innerfunction.scffld.Message;
 import com.innerfunction.scffld.MessageReceiver;
 import com.innerfunction.scffld.MessageRouter;
 import com.innerfunction.scffld.Service;
 import com.innerfunction.smokestack.commands.CommandScheduler;
+import com.innerfunction.util.Files;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,6 +45,8 @@ import java.util.Map;
  */
 public class Provider implements Service, MessageRouter, MessageReceiver {
 
+    static final String Tag = Provider.class.getSimpleName();
+
     static final String SmokestackNamePrefix = "smokestack";
 
     /** A command scheduler to be used by the different content authorities. */
@@ -59,8 +63,24 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     private String packagedContentPath;
 
     public Provider(Context context) {
+
         commandScheduler = new CommandScheduler( context );
-        commandScheduler.setQueueDBName( String.format("%s.commandqueue", SmokestackNamePrefix ) );
+        commandScheduler.setQueueDBName( SmokestackNamePrefix+".commandqueue" );
+
+        // Cache locations.
+        File storageDir = Files.getStorageDir( context );
+
+        String dirName = SmokestackNamePrefix+".staging";
+        this.stagingPath = new File( storageDir, dirName ).getAbsolutePath();
+
+        dirName = SmokestackNamePrefix+".app";
+        this.appCachePath = new File( storageDir, dirName ).getAbsolutePath();
+
+        File cacheDir = Files.getCacheDir( context );
+        dirName = SmokestackNamePrefix+".content";
+        this.contentCachePath = new File( cacheDir, dirName ).getAbsolutePath();
+
+        this.packagedContentPath = "/android_asset/"+"packaged-content";
     }
 
     public CommandScheduler getCommandScheduler() {
@@ -110,17 +130,49 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
         return packagedContentPath;
     }
 
-    public Authority getContentAuthority(Uri uri) throws FileNotFoundException {
+    /**
+     * Return a content authority suitable for servicing a content provider request.
+     * Reads the authority name encoded in the content URI provided and returns the authority
+     * bound to that name.
+     *
+     * @param uri The content URI to be serviced.
+     * @return A content authority instance; or null if none is found.
+     */
+    protected Authority getContentAuthority(Uri uri) {
         String authorityName = uri.getAuthority();
         Authority authority = authorities.get( authorityName );
         if( authority == null ) {
-            throw new FileNotFoundException( authorityName );
+            Log.w( Tag, String.format( "Content authority '%s' not found for URI %s", uri.getAuthority(), uri ) );
         }
         return authority;
     }
 
-    public ParcelFileDescriptor openFile(Uri uri, String mode, CancellationSignal signal) throws FileNotFoundException {
+    /**
+     * Return the named content authority.
+     * @param authorityName The name of the required content authority.
+     * @return The authority bound to the specified name, or null if it can't be found.
+     */
+    protected Authority getContentAuthority(String authorityName) {
+        Authority authority = authorities.get( authorityName );
+        if( authority == null ) {
+            Log.w( Tag, String.format("Content authority '%s' not found", authorityName ) );
+        }
+        return authority;
+    }
+
+    public String getType(Uri uri) {
         Authority authority = getContentAuthority( uri );
+        if( authority != null ) {
+            return authority.getType( uri );
+        }
+        return null;
+    }
+
+    public ParcelFileDescriptor openFile(Uri uri, CancellationSignal signal) throws FileNotFoundException {
+        Authority authority = getContentAuthority( uri );
+        if( authority == null ) {
+            throw new FileNotFoundException( uri.toString() );
+        }
         File contentFile = authority.getContentFile( uri, signal );
         if( contentFile == null ) {
             throw new FileNotFoundException( uri.toString() );
@@ -129,14 +181,11 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     }
 
     public Cursor query(Uri uri, String[] projection, String selection, String[] args, String order, CancellationSignal signal) {
-        try {
-            Authority authority = getContentAuthority( uri );
+        Authority authority = getContentAuthority( uri );
+        if( authority != null ) {
             return authority.query( uri, projection, selection, args, order, signal );
         }
-        catch(FileNotFoundException e) {
-            // TODO What should be returned in this case?
-            return null;
-        }
+        return null;
     }
 
     @Override
@@ -156,7 +205,9 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     }
 
     @Override
-    public void startService() {}
+    public void startService() {
+        commandScheduler.startService();
+    }
 
     @Override
     public void stopService() {}

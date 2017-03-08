@@ -17,7 +17,10 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
 
+import com.innerfunction.uri.CompoundURI;
+
 import java.io.File;
+import java.util.Map;
 
 /**
  * An interface implemented by classes which act as content authorities to content providers.
@@ -34,23 +37,53 @@ public interface Authority {
     void setProvider(Provider provider);
 
     /**
+     * Return the type of the content associated with a URI.
+     * This is one of the authority's methods used to service requests from Android's internal
+     * content URL or content resolver subsystems. Type here refers to an internal Android record
+     * or cursor type identifier.
+     *
+     * @link https://developer.android.com/reference/android/content/ContentProvider.html#getType(android.net.Uri)
+     *
+     * @param uri   The URI of the content whose type is required.
+     * @return A string specifying the content type.
+     */
+    String getType(Uri uri);
+
+    /**
      * Return the content associated with a URI.
+     * This is one of the authority's methods used to service requests from Android's internal
+     * content URL or content resolver subsystems.
+     *
      * @param uri       The content URI to resolve.
-     * @param signal    A cancellation signal.
+     * @param signal    An object used to signal request cancellation.
      * @return A file containing the required content; may return null if the content isn't found.
      */
     File getContentFile(Uri uri, CancellationSignal signal);
 
     /**
      * Return a cursor for iterating over the data associated with a URI.
+     * This is one of the authority's methods used to service requests from Android's internal
+     * content URL or content resolver subsystems.
+     *
      * @param uri           The content URI to resolve.
      * @param projection    An array specifying names of data fields to return.
      * @param selection     An array specifying the selection criteria.
      * @param args          An array of arguments to the selection criteria.
      * @param order         A string specifying the result sort order.
-     * @param signal        A cancellation signal.
+     * @param signal        An object used to signal request cancellation.
      * @return A cursor over the required content; may return null if the content isn't found.
      */
     Cursor query(Uri uri, String[] projection, String selection, String[] args, String order, CancellationSignal signal);
+
+    /**
+     * Return the content associated with the specified path.
+     * This method is used to resolve data for content: URIs in the SDK's internal URI system.
+     *
+     * @param uri       The URI being requested.
+     * @param path      The content path.
+     * @param params    Associated request parameters.
+     * @return An object encapsulating the required data.
+     */
+    Object getContent(CompoundURI uri, String path, Map<String,Object> params);
 
 }

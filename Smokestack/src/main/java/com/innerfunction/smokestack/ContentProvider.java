@@ -18,6 +18,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.os.CancellationSignal;
+import android.util.Log;
 
 import com.innerfunction.smokestack.content.Provider;
 
@@ -49,6 +50,8 @@ import java.io.FileNotFoundException;
  */
 public class ContentProvider extends android.content.ContentProvider {
 
+    static final String Tag = ContentProvider.class.getSimpleName();
+
     /** The content provider's delegate. */
     private Provider provider;
 
@@ -57,15 +60,15 @@ public class ContentProvider extends android.content.ContentProvider {
         AppContainer appContainer = AppContainer.getAppContainer( getContext() );
         provider = appContainer.getContentProvider();
         if( provider == null ) {
-            // TODO Log warning
-            return false; // This content provider is no use without the delegate.
+            Log.w( Tag, "Unable to resolve content provider on app container");
+            return false; // This content provider can't be used without the delegate.
         }
         return true;
     }
 
     @Override
     public ParcelFileDescriptor openFile(Uri uri, String mode, CancellationSignal signal) throws FileNotFoundException {
-        return provider.openFile( uri, mode, signal );
+        return provider.openFile( uri, signal );
     }
 
     @Override
@@ -75,7 +78,7 @@ public class ContentProvider extends android.content.ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        throw new UnsupportedOperationException("Op not supported");
+        return provider.getType( uri );
     }
 
     @Override

@@ -46,21 +46,20 @@ public class AppContainer extends com.innerfunction.scffld.app.AppContainer {
     public static synchronized AppContainer getAppContainer(Context context) {
         if( Instance == null ) {
             Instance = new AppContainer( context );
-            Instance.addTypes( CoreTypes );
             Instance.loadConfiguration( m(
                 kv("types",             "@app:/SCFFLD/types.json"),
                 kv("schemes",           "@dirmap:/SCFFLD/schemes"),
                 kv("patterns",          "@dirmap:/SCFFLD/patterns"),
                 kv("nameds",            "@dirmap:/SCFFLD/nameds"),
                 kv("contentProvider", m(
-                    kv("authorities",   "@dirmap:/SCFFLD/cas")
+                    kv("authorities",   "@dirmap:/SCFFLD/repositories")
                 ))
             ));
         }
         return Instance;
     }
 
-    public static ContentAppContainer getAppContainer() {
+    public static AppContainer getAppContainer() {
         return Instance;
     }
 
