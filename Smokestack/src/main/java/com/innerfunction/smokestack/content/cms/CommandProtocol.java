@@ -21,7 +21,6 @@ import com.innerfunction.q.Q;
 import com.innerfunction.smokestack.AppContainer;
 import com.innerfunction.smokestack.commands.Command;
 import com.innerfunction.smokestack.commands.CommandScheduler;
-import com.innerfunction.smokestack.content.Authority;
 import com.innerfunction.util.Files;
 import com.innerfunction.util.KeyPath;
 
@@ -57,13 +56,13 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
     private Client httpClient;
 
 
-    public CommandProtocol(Authority authority) {
+    public CommandProtocol(ContentAuthority authority) {
         this.cms = authority.getCMS();
         this.authManager = authority.getAuthManager();
         this.logoutAction = authority.getLogoutAction();
 
         // Use a copy of the file DB to avoid problems with multi-thread access.
-        this.fileDB = fileDB.newInstance();
+        this.fileDB = authority.getFileDB();
 
         // Register command handlers.
         addCommand( "refresh", new Command() {
@@ -92,7 +91,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
         params.put("secure", getIsSecure() );
 
         // Read current group fingerprint.
-        Map<String,Object> record = fileDB.readRecordWithID("fingerprints","$group");
+        Map<String,Object> record = fileDB.read("fingerprints","$group");
         if( record != null ) {
             group = record.get("current");
             params.put("group", group );
@@ -171,7 +170,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                             boolean isFilesTable = "files".equals( tableName );
                             List<Map<String,Object>> table = (List<Map<String,Object>>)updates.get( tableName );
                             for( Map<String,Object> values : table ) {
-                                fileDB.upsertValues( values, tableName );
+                                fileDB.upsert( tableName, values );
                                 // If processing the files table then record the updated file
                                 // category name.
                                 if( isFilesTable ) {
@@ -193,7 +192,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                         List<Map<String,Object>> deleted = fileDB.performQuery("SELECT id, path FROM files WHERE status='deleted'");
                         for( Map<String,Object> record : deleted ) {
                             // Delete cached file, if exists.
-                            String path = fileDB.getCacheLocationForFile( record );
+                            String path = fileDB.getCacheLocationForFileRecord( record );
                             if( path != null ) {
                                 File cacheFile = new File( path );
                                 cacheFile.delete();

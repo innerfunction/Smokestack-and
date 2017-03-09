@@ -103,19 +103,23 @@ public class GetURLCommand implements Command {
                     }
                     requestWindow.add( System.currentTimeMillis() );
                     // Submit the request.
-                    try {
-                        httpClient.getFile( url )
-                            .then( new Q.Promise.Callback<Response, Response>() {
-                                @Override
-                                public Response result(Response response) {
-                                    // Copy downloaded file to target location.
-                                    Files.mv( response.getDataFile(), new File( filename ) );
-                                    promise.resolve( CommandScheduler.NoFollowOns );
-                                    return response;
+                    httpClient.getFile( url )
+                        .then( new Q.Promise.Callback<Response, Response>() {
+                            @Override
+                            public Response result(Response response) {
+                                // Copy downloaded file to target location.
+                                Files.mv( response.getDataFile(), new File( filename ) );
+                                promise.resolve( CommandScheduler.NoFollowOns );
+                                return response;
+                            }
+                        } )
+                        .error( new Q.Promise.ErrorCallback() {
+                            public void error(Exception e) {
+                                if( e instanceof MalformedURLException ) {
+                                    // No point retrying if URL is bad.
+                                    promise.reject( e );
                                 }
-                            } )
-                            .error( new Q.Promise.ErrorCallback() {
-                                public void error(Exception e) {
+                                else {
                                     // Check for retries.
                                     int attempts = previousAttempts + 1;
                                     if( attempts < maxRetries ) {
@@ -127,11 +131,8 @@ public class GetURLCommand implements Command {
                                         promise.reject( "All retries used" );
                                     }
                                 }
-                            } );
-                    }
-                    catch(MalformedURLException e) {
-                        promise.reject( e );
-                    }
+                            }
+                        } );
                 }
             };
             // Request throttling - ensure number of requests per minute doesn't exceed some defined

@@ -63,6 +63,10 @@ public class Fileset implements IOCObjectAware {
         return path;
     }
 
+    public boolean isCachable() {
+        return cachable;
+    }
+
     @Override
     public void notifyIOCObject(Object object, String propertyName) {
         // Record the fileset's category name as the name this object is bound to in its parent

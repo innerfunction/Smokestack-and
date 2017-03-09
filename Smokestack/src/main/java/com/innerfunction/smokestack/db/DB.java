@@ -340,7 +340,7 @@ public class DB implements Service, IOCContextAware {
      * @return A map containing all the values in the current cursor row.
      */
     private Map<String,Object> readRowFromCursor(Cursor cursor) {
-        Map<String,Object> result = new HashMap<String,Object>();
+        Map<String,Object> result = new HashMap<>();
         int ccount = cursor.getColumnCount();
         for( int i = 0; i < ccount; i++ ) {
             String cname = cursor.getColumnName( i );
