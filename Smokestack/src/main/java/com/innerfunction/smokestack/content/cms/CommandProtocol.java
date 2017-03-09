@@ -21,6 +21,7 @@ import com.innerfunction.q.Q;
 import com.innerfunction.smokestack.AppContainer;
 import com.innerfunction.smokestack.commands.Command;
 import com.innerfunction.smokestack.commands.CommandScheduler;
+import com.innerfunction.smokestack.content.AuthenticationManager;
 import com.innerfunction.smokestack.db.Record;
 import com.innerfunction.smokestack.db.ResultSet;
 import com.innerfunction.util.Files;
@@ -90,7 +91,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
         // Query the file DB for the latest commit ID.
         Object commit = null, group = null;
         Map<String,Object> params = new HashMap<>();
-        params.put("secure", getIsSecure() );
+        params.put("secure", getIsSecureParam() );
 
         // Read current group fingerprint.
         Record record = fileDB.read("fingerprints","$group");
@@ -271,7 +272,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
         // Build the fileset URL and query parameters.
         final String filesetURL = cms.getURLForFileset( category );
         Map<String,Object> data = new HashMap<>();
-        data.put("secure", getIsSecure() );
+        data.put("secure", getIsSecureParam() );
         if( args.size() > 2 ) {
             data.put("since", args.get( 2 ) );
         }
@@ -306,7 +307,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
         return promise;
     }
 
-    private boolean getIsSecure() {
+    private String getIsSecureParam() {
         return authManager.hasCredentials() ? "true" : "false";
     }
 }

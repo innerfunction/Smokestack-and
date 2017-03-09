@@ -232,20 +232,60 @@ public class ORM implements IOCObjectAware {
      * Deletes any related records unique to the deleted object.
      */
     public boolean deleteKey(String key) {
-
+        boolean ok = true;
+        db.beginTransaction();
+        String sql;
+        for( String mname : mappings.keySet() ) {
+            Mapping mapping = mappings.get( mname );
+            String relation = mapping.relation;
+            if( "map".equals( relation ) || "dictionary".equals( relation ) ||
+                "array".equals( relation ) || "list".equals( relation ) ) {
+                String oidColumn = getColumnWithNameOrTag( mapping.table, mapping.owneridColumn, "ownerid");
+                sql = String.format("DELETE FROM %s WHERE %s=?", mapping.table, oidColumn );
+                ok &= db.performUpdate( sql, key );
+            }
+        }
+        // The name of the ID column on the source table.
+        String sidColumn = getIDColumnForTable( source );
+        // TODO Support deletion of many-one relations by deleting records from relation table where no foreign key value in source table.
+        sql = String.format("DELETE FROM %s WHERE %s=?", source, sidColumn );
+        ok &= db.performUpdate( sql, key );
+        if( ok ) {
+            db.commitTransaction();
+        }
+        else {
+            db.rollbackTransaction();
+        }
+        return ok;
     }
 
     /** Return a column name, or if not specified, the name of the column on a table with the specified tag. */
     public String getColumnWithNameOrTag(String table, String name, String tag) {
-
+        if( name == null ) {
+            name = db.getColumnForTag( table, tag );
+            if( name == null ) {
+                name = tag;
+            }
+        }
+        return name;
     }
 
     private String getColumnNamesForTable(String table, String prefix) {
-
+        String columnNames = null;
+        Table tableDef = db.getTables().get( table );
+        if( tableDef != null ) {
+            List<String> columns = new ArrayList<>();
+            for( Column columnDef : tableDef.columns ) {
+                String column = String.format("%s.%s", prefix, columnDef.name );
+                columns.add( String.format("%s AS '%s'", column, column ) );
+            }
+            columnNames = TextUtils.join(",", columns );
+        }
+        return columnNames;
     }
 
     private String getIDColumnForTable(String table) {
-
+        return db.getColumnForTag( table, "id");
     }
 
     @Override
@@ -335,10 +375,12 @@ public class ORM implements IOCObjectAware {
 
         /** Test whether the mapping represents a (non-shared) object or property mapping. */
         public boolean isObjectMapping() {
+            return "object".equals( relation ) || "property".equals( relation );
         }
 
         /** Test whether the mapping represents a shared object or property mapping. */
         public boolean isSharedObjectMapping() {
+            return "shared-object".equals( relation ) || "shared-property".equals( relation );
         }
     }
 

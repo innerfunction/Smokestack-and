@@ -13,7 +13,10 @@
 // limitations under the License
 package com.innerfunction.smokestack.content.cms;
 
+import android.content.Context;
+
 import com.innerfunction.smokestack.content.AbstractAuthority;
+import com.innerfunction.smokestack.content.AuthenticationManager;
 
 /**
  * A class representing a content repository in the Smokestack CMS.
@@ -22,6 +25,10 @@ import com.innerfunction.smokestack.content.AbstractAuthority;
  */
 public class ContentAuthority extends AbstractAuthority {
 
+    public ContentAuthority(Context context) {
+        super( context );
+    }
+    
     public Settings getCMS() {
     }
 
@@ -36,4 +43,10 @@ public class ContentAuthority extends AbstractAuthority {
     public FileDB getFileDB() {
 
     }
+
+    @Override
+    public void refreshContent() {
+
+    }
+
 }

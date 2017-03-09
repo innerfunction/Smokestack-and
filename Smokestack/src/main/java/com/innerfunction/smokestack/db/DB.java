@@ -75,6 +75,8 @@ public class DB implements Service, IOCContextAware {
     private boolean resetDatabase;
     /** Database table schemas + initial data. */
     private Map<String,Table> tables;
+    /** Object/relational mappings defined for the database. */
+    private ORM orm;
 
     public DB() {
         this.name = "semo";
@@ -147,6 +149,14 @@ public class DB implements Service, IOCContextAware {
 
     public Map<String,Table> getTables() {
         return tables;
+    }
+
+    public ORM getORM() {
+        return orm;
+    }
+
+    public void setORM(ORM orm) {
+        this.orm = orm;
     }
 
     /**
