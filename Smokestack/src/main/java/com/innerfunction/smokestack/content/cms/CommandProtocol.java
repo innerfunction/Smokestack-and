@@ -21,6 +21,8 @@ import com.innerfunction.q.Q;
 import com.innerfunction.smokestack.AppContainer;
 import com.innerfunction.smokestack.commands.Command;
 import com.innerfunction.smokestack.commands.CommandScheduler;
+import com.innerfunction.smokestack.db.Record;
+import com.innerfunction.smokestack.db.ResultSet;
 import com.innerfunction.util.Files;
 import com.innerfunction.util.KeyPath;
 
@@ -91,14 +93,14 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
         params.put("secure", getIsSecure() );
 
         // Read current group fingerprint.
-        Map<String,Object> record = fileDB.read("fingerprints","$group");
+        Record record = fileDB.read("fingerprints","$group");
         if( record != null ) {
             group = record.get("current");
             params.put("group", group );
         }
 
         // Read latest commit ID.
-        List<Map<String,Object>> rs = fileDB.performQuery("SELECT id, max(date) FROM commits");
+        ResultSet rs = fileDB.performQuery("SELECT id, max(date) FROM commits");
         if( rs.size() > 0 ) {
             // File DB contains previous commits, read latest commit ID and add as request parameter
             record = rs.get( 0 );
@@ -110,8 +112,8 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
 
         // Specify accepts options.
         Map<String,Object> headers = m(
-            kv("Accept",            AcceptMIMETypes ),
-            kv("Accept-Encoding",   AcceptEncodings )
+            kv("Accept",          AcceptMIMETypes ),
+            kv("Accept-Encoding", AcceptEncodings )
         );
         // Fetch updates from the server.
         final Object _commit = commit, _group = group;
@@ -146,7 +148,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                     else if( bodyData instanceof Map ) {
                         // Write updates to database.
                         Map<String, Object> updatesData = (Map<String, Object>)bodyData;
-                        Map<String, Object> updates = (Map<String, Object>)updatesData.get( "db" );
+                        Map<String, Object> updates = (Map<String, Object>)updatesData.get("db");
 
                         // A map of fileset category names to a 'since' commit value (may be null).
                         Map<String, Object> updatedCategories = new HashMap<>();
@@ -155,12 +157,12 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                         fileDB.beginTransaction();
 
                         // Check group fingerprint to see if a migration is needed.
-                        String updateGroup = KeyPath.getValueAsString( "repository.group", updatesData );
+                        String updateGroup = KeyPath.getValueAsString("repository.group", updatesData );
                         boolean migrate = !_group.equals( updateGroup );
                         if( migrate ) {
                             // Performing a migration due to an ACM group ID change; mark all files
                             // as provisionally deleted.
-                            fileDB.performUpdate( "UPDATE files SET status='deleted'" );
+                            fileDB.performUpdate("UPDATE files SET status='deleted'");
                         }
                         // Shift current fileset fingerprints to previous.
                         fileDB.performUpdate("UPDATE fingerprints SET previous=current");
@@ -189,8 +191,8 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                         }
 
                         // Check for deleted files.
-                        List<Map<String,Object>> deleted = fileDB.performQuery("SELECT id, path FROM files WHERE status='deleted'");
-                        for( Map<String,Object> record : deleted ) {
+                        ResultSet deleted = fileDB.performQuery("SELECT id, path FROM files WHERE status='deleted'");
+                        for( Record record : deleted ) {
                             // Delete cached file, if exists.
                             String path = fileDB.getCacheLocationForFileRecord( record );
                             if( path != null ) {
@@ -206,9 +208,9 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                         fileDB.pruneRelatedValues();
 
                         // Read list of fileset names with modified fingerprints.
-                        List<Map<String,Object>> rows = fileDB.performQuery("SELECT category FROM fingerprints WHERE current != previous");
-                        for( Map<String,Object> row : rows ) {
-                            String category = KeyPath.getValueAsString("category", row );
+                        ResultSet rs = fileDB.performQuery("SELECT category FROM fingerprints WHERE current != previous");
+                        for( Record record : rs ) {
+                            String category = record.getValueAsString("category");
                             if( "$group".equals( category ) ) {
                                 // The ACM group fingerprint entry - skip.
                                 continue;

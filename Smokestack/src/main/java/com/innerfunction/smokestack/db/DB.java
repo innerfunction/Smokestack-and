@@ -218,14 +218,14 @@ public class DB implements Service, IOCContextAware {
      * Read an object from the database.
      * @param table     The name of the table containing the data.
      * @param id        The ID of the object to read.
-     * @return A map containing the object's values.
+     * @return A record object containing the object's values.
      */
-    public Map<String,Object> read(String table, String id) {
+    public Record read(String table, String id) {
         return read( db, table, id );
     }
 
-    private Map<String,Object> read(SQLiteDatabase db, String table, String id) {
-        Map<String,Object> result = null;
+    private Record read(SQLiteDatabase db, String table, String id) {
+        Record result = null;
         String idColumn = getColumnForTag( table, "id" );
         if( idColumn != null ) {
             result = read( db, table, idColumn, id );
@@ -236,8 +236,8 @@ public class DB implements Service, IOCContextAware {
         return result;
     }
 
-    private Map<String,Object> read(SQLiteDatabase db, String table, String idColumn, String id) {
-        Map<String,Object> result = null;
+    private Record read(SQLiteDatabase db, String table, String idColumn, String id) {
+        Record result = null;
         try {
             String sql = String.format("SELECT * FROM %s WHERE %s=?", table, idColumn );
             String[] params = new String[]{ id };
@@ -257,9 +257,9 @@ public class DB implements Service, IOCContextAware {
      * Query the DB.
      * @param sql   The SQL to execute.
      * @param args  Arguments to the SQL.
-     * @return A list of map objects. Each map contains data from a single row of the query result.
+     * @return A ResultSet instance.
      */
-    public List<Map<String,Object>> performQuery(String sql, List<String> args) {
+    public ResultSet performQuery(String sql, List<String> args) {
         return performQuery( sql, args.toArray( new String[args.size()] ));
     }
 
@@ -277,21 +277,21 @@ public class DB implements Service, IOCContextAware {
      * Query the DB.
      * @param sql   The SQL to execute.
      * @param args  Arguments to the SQL.
-     * @return A list of map objects. Each map contains data from a single row of the query result.
+     * @return A ResultSet instance.
      */
-    public List<Map<String,Object>> performQuery(String sql, String... args) {
+    public ResultSet performQuery(String sql, String... args) {
         args = replaceNullParameterValue( args );
-        List<Map<String,Object>> result = new ArrayList<>();
+        ResultSet rs = new ResultSet();
         Cursor cursor = db.rawQuery( sql, args );
         int rowCount = cursor.getCount();
         if( cursor.moveToFirst() ) {
             for( int i = 0; i < rowCount; i++ ) {
-                result.add( readRowFromCursor( cursor ) );
+                rs.add( readRowFromCursor( cursor ) );
                 cursor.moveToNext();
             }
         }
         cursor.close();
-        return result;
+        return rs;
     }
 
     /**
@@ -326,10 +326,10 @@ public class DB implements Service, IOCContextAware {
         args = replaceNullParameterValue( args );
         int count = 0;
         String sql = String.format("SELECT count(*) AS count FROM %s WHERE %s", table, where );
-        List<Map<String,Object>> result = performQuery( sql, args );
-        if( result.size() > 0 ) {
-            Map<String,?> record = result.get( 0 );
-            count = (Integer)record.get("count");
+        ResultSet rs = performQuery( sql, args );
+        if( rs.size() > 0 ) {
+            Record record = rs.get( 0 );
+            count = record.getValueAsInteger("count");
         }
         return count;
     }
@@ -337,10 +337,10 @@ public class DB implements Service, IOCContextAware {
     /**
      * Read data from a DB cursor.
      * @param cursor
-     * @return A map containing all the values in the current cursor row.
+     * @return A Record instance containing all the values in the current cursor row.
      */
-    private Map<String,Object> readRowFromCursor(Cursor cursor) {
-        Map<String,Object> result = new HashMap<>();
+    private Record readRowFromCursor(Cursor cursor) {
+        Record result = new Record();
         int ccount = cursor.getColumnCount();
         for( int i = 0; i < ccount; i++ ) {
             String cname = cursor.getColumnName( i );
