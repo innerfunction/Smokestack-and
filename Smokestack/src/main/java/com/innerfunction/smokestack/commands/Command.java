@@ -16,7 +16,6 @@ package com.innerfunction.smokestack.commands;
 import com.innerfunction.q.Q;
 
 import java.util.List;
-import static com.innerfunction.smokestack.commands.CommandScheduler.CommandItem;
 
 /**
  * A schedulable command.
@@ -30,6 +29,6 @@ public interface Command {
      * Returns a deferred promise which may resolve to an array of new commands to
      * be queued for execution after the current, and any other commands, complete.
      */
-    Q.Promise<List<CommandItem>> execute(String name, List args);
+    Q.Promise<CommandList> execute(String name, List args);
 
 }

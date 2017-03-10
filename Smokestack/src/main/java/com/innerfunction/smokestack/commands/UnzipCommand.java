@@ -42,7 +42,7 @@ public class UnzipCommand implements Command {
     }
 
     @Override
-    public Q.Promise<List<CommandScheduler.CommandItem>> execute(String name, List args) {
+    public Q.Promise<CommandList> execute(String name, List args) {
         if( args.size() < 2 ) {
             return Q.reject("Wrong number of arguments");
         }

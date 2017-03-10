@@ -28,7 +28,7 @@ public class ContentAuthority extends AbstractAuthority {
     public ContentAuthority(Context context) {
         super( context );
     }
-    
+
     public Settings getCMS() {
     }
 

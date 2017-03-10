@@ -20,6 +20,7 @@ import com.innerfunction.scffld.Service;
 import com.innerfunction.q.Q;
 import com.innerfunction.smokestack.db.Column;
 import com.innerfunction.smokestack.db.DB;
+import com.innerfunction.smokestack.db.ResultSet;
 import com.innerfunction.smokestack.db.Table;
 import com.innerfunction.util.RunQueue;
 
@@ -48,7 +49,7 @@ public class CommandScheduler implements Service {
     static final RunQueue ExecRunQueue = new RunQueue( Tag );
 
     /** Empty command list, used to indicate that a command has no follow on commands. */
-    public static final List<CommandItem> NoFollowOns = Collections.emptyList();
+    public static final CommandList NoFollowOns = new CommandList();
 
     /** The queue database. */
     private DB db;
@@ -71,37 +72,6 @@ public class CommandScheduler implements Service {
      * records; this mode is primarily useful for debugging.
      */
     private boolean deleteExecutedQueueRecords = true;
-
-    /** An object representing a command item on the execution queue. */
-    public static class CommandItem {
-        /** The ID of the command's DB record. */
-        String rowID;
-        /** The command name. */
-        String name;
-        /** A list of the command arguments. */
-        List args;
-        /** The command's execution priority. */
-        Integer priority;
-        /** Instantiate an empty command item. */
-        CommandItem() {}
-        /** Instantiate a new command item from a db record. */
-        CommandItem(Map<String,?> record) {
-            this.rowID = record.get("id").toString();
-            this.name = (String)record.get("command");
-            try {
-                String json = (String)record.get("args");
-                this.args = (List)JSONValue.parseWithException( json );
-            }
-            catch(org.json.simple.parser.ParseException e) {
-                Log.e(Tag, "Parsing JSON args", e );
-            }
-        }
-        /** Instantiate a new command item with a command name and list of arguments. */
-        public CommandItem(String name, Object... args) {
-            this.name = name;
-            this.args = Arrays.asList( args );
-        }
-    }
 
     public CommandScheduler(Context androidContext) {
         // Command database setup.
@@ -169,7 +139,7 @@ public class CommandScheduler implements Service {
             @Override
             public void run() {
                 // NOTE performQuery(String sql, Object... params);
-                List<Map<String,Object>> queueItems = db.performQuery("SELECT * FROM queue WHERE status='P' ORDER BY batch, id ASC");
+                ResultSet queueItems = db.performQuery("SELECT * FROM queue WHERE status='P' ORDER BY batch, id ASC");
                 execQueue = new ArrayList<>();
                 for( Map<String,?> queueItem : queueItems ) {
                     execQueue.add( new CommandItem( queueItem ) );
@@ -294,8 +264,8 @@ public class CommandScheduler implements Service {
                     return;
                 }
                 command.execute( commandItem.name, commandItem.args )
-                    .then( new Q.Promise.Callback<List<CommandItem>, Object>() {
-                        public Object result(final List<CommandItem> commands) {
+                    .then( new Q.Promise.Callback<CommandList, Object>() {
+                        public Object result(final CommandList commands) {
                             ExecRunQueue.dispatch( new Runnable() {
                                 public void run() {
                                     // Queue any new commands, delete current command from db.

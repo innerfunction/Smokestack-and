@@ -91,7 +91,7 @@ public class CommandProtocol implements Command {
     }
 
     @Override
-    public Q.Promise<List<CommandItem>> execute(String name, List args) {
+    public Q.Promise<CommandList> execute(String name, List args) {
         // Split the protocol prefix from the name to get the actual command name.
         String[] nameParts = name.split("\\.");
         commandPrefix = nameParts[0]; // Hack to get the correct prefix used by the command protocol.

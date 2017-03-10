@@ -20,6 +20,7 @@ import com.innerfunction.http.Response;
 import com.innerfunction.q.Q;
 import com.innerfunction.smokestack.AppContainer;
 import com.innerfunction.smokestack.commands.Command;
+import com.innerfunction.smokestack.commands.CommandList;
 import com.innerfunction.smokestack.commands.CommandScheduler;
 import com.innerfunction.smokestack.content.AuthenticationManager;
 import com.innerfunction.smokestack.db.Record;
@@ -70,22 +71,22 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
         // Register command handlers.
         addCommand( "refresh", new Command() {
             @Override
-            public Q.Promise<List<CommandScheduler.CommandItem>> execute(String name, List args) {
+            public Q.Promise<CommandList> execute(String name, List args) {
                 return CommandProtocol.this.refresh( args );
             }
         } );
         addCommand( "download-fileset", new Command() {
             @Override
-            public Q.Promise<List<CommandScheduler.CommandItem>> execute(String name, List args) {
+            public Q.Promise<CommandList> execute(String name, List args) {
                 return CommandProtocol.this.downloadFileset( args );
             }
         } );
     }
 
     /** Start a content refresh. */
-    private Q.Promise<List<CommandScheduler.CommandItem>> refresh(List<String> args) {
+    private Q.Promise<CommandList> refresh(List<String> args) {
 
-        final Q.Promise<List<CommandScheduler.CommandItem>> promise = new Q.Promise<>();
+        final Q.Promise<CommandList> promise = new Q.Promise<>();
         final String refreshURL = cms.getURLForUpdates();
 
         // Query the file DB for the latest commit ID.
@@ -124,12 +125,12 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                 public Response result(Response response) {
 
                     // Create list of follow up commands.
-                    List<CommandScheduler.CommandItem> commands = new ArrayList<>();
+                    CommandList commands = new CommandList();
 
                     if( response.getStatusCode() == 401 ) {
                         // Authentication failure.
                         if( logoutAction != null ) {
-                            AppContainer.postMessage( logoutAction, this );
+                            AppContainer.getAppContainer().postMessage( logoutAction, this );
                         }
                         else {
                             authManager.removeCredentials();
@@ -236,8 +237,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                                 if( since != NullCategory ) {
                                     args.add( since.toString() );
                                 }
-                                CommandScheduler.CommandItem commandItem = new CommandScheduler.CommandItem( command, args );
-                                commands.add( commandItem );
+                                commands.addCommand( command, args );
                             }
                         }
 
@@ -250,7 +250,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                     return null;
                 }
             })
-            .fail(new Q.Promise.ErrorCallback() {
+            .error(new Q.Promise.ErrorCallback() {
                 public void error(Exception e) {
                     String msg = String.format("Updates download from %s failed: %s",
                         refreshURL, e.getMessage() );
@@ -263,8 +263,9 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
     }
 
     /** Download a fileset. */
-    private Q.Promise<List<CommandScheduler.CommandItem>> downloadFileset(List<String> args) {
-        final Q.Promise<List<CommandScheduler.CommandItem>> promise = new Q.Promise<>();
+    private Q.Promise<CommandList> downloadFileset(List<String> args) {
+
+        final Q.Promise<CommandList> promise = new Q.Promise<>();
 
         final String category = args.get( 0 );
         final String cachePath = args.get( 1 );
@@ -296,7 +297,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
                     return null;
                 }
             })
-            .fail(new Q.Promise.ErrorCallback() {
+            .error(new Q.Promise.ErrorCallback() {
                 public void error(Exception e) {
                     String msg = String.format("Fileset download from %s failed: %s",
                         filesetURL, e.getMessage() );
