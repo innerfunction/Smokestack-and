@@ -13,13 +13,21 @@
 // limitations under the License
 package com.innerfunction.smokestack.content;
 
+import java.net.PasswordAuthentication;
+
 /**
+ * An interface for managing a content authority's user authentication credentials.
  * Created by juliangoacher on 09/03/2017.
  */
 public interface AuthenticationManager {
 
+    /** Delete any stored user credentials */
     void removeCredentials();
 
+    /** Check whether any user credentials are stored. */
     boolean hasCredentials();
+
+    /** Return user credentials as a PasswordAuthentication instance. */
+    PasswordAuthentication getPasswordAuthentication();
 
 }

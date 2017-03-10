@@ -17,8 +17,8 @@ import com.innerfunction.http.Client;
 import com.innerfunction.http.Response;
 import com.innerfunction.q.Q;
 import com.innerfunction.smokestack.commands.Command;
+import com.innerfunction.smokestack.commands.CommandList;
 import com.innerfunction.smokestack.commands.CommandScheduler;
-import com.innerfunction.smokestack.commands.CommandScheduler.CommandItem;
 import com.innerfunction.util.Files;
 
 import android.os.Handler;
@@ -47,7 +47,7 @@ public class GetURLCommand implements Command {
     /** The HTTP client used to fetch URLs. */
     private Client httpClient;
     /** A promise which will be resolved once the URL is fetched. */
-    private Q.Promise<List<CommandItem>> promise;
+    private Q.Promise<CommandList> promise;
     /** The name the command was invoked under. Needed for queueing retries. */
     private String commandName;
     /** The URL to fetch. */
@@ -80,7 +80,7 @@ public class GetURLCommand implements Command {
     }
 
     @Override
-    public Q.Promise<List<CommandItem>> execute(String name, List args) {
+    public Q.Promise<CommandList> execute(String name, List args) {
         this.commandName = name;
         this.promise = new Q.Promise<>();
 
@@ -123,8 +123,8 @@ public class GetURLCommand implements Command {
                                     // Check for retries.
                                     int attempts = previousAttempts + 1;
                                     if( attempts < maxRetries ) {
-                                        List<CommandItem> commands = new ArrayList<>();
-                                        commands.add( new CommandItem( commandName, url, attempts ) );
+                                        CommandList commands = new CommandList();
+                                        commands.addCommand( commandName, url, attempts );
                                         promise.resolve( commands );
                                     }
                                     else {

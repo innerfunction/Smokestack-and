@@ -154,7 +154,7 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
     public Object getContent(CompoundURI uri, String path, Map<String, Object> params) {
         ContentScheme.AuthorityResponse response = new ContentScheme.AuthorityResponse( context, uri );
         writeResponse( response, path, params );
-        return response;
+        return response.getResource();
     }
 
     @Override

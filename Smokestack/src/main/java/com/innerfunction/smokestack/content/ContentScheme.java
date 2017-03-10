@@ -17,6 +17,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.innerfunction.uri.CompoundURI;
+import com.innerfunction.uri.FileResource;
 import com.innerfunction.uri.Resource;
 import com.innerfunction.uri.URIScheme;
 import com.innerfunction.util.Files;
@@ -68,12 +69,20 @@ public class ContentScheme implements URIScheme {
      * An implementation of the AuthorityResponse interface that wraps response data in a Resource.
      * TODO Check standard Resource type conversions - particularly byte[] -> JSON data
      */
-    public static class AuthorityResponse extends Resource implements com.innerfunction.smokestack.content.AuthorityResponse {
+    public static class AuthorityResponse implements com.innerfunction.smokestack.content.AuthorityResponse {
 
         static final String Tag = AuthorityResponse.class.getSimpleName();
 
+        /** The Android context. */
+        private Context context;
+        /** The URI used to request the data. */
+        private CompoundURI uri;
         /** An internal buffer for storing incremental responses. */
         private ByteArrayOutputStream buffer;
+        /** The response data, as a byte array, string or JSON data. */
+        private Object data;
+        /** The response data, as a file. */
+        private File file;
 
         /**
          * Create a new resource.
@@ -82,32 +91,38 @@ public class ContentScheme implements URIScheme {
          * @param uri     The URI used to reference the resource.
          */
         public AuthorityResponse(Context context, CompoundURI uri) {
-            super( context, null, uri );
+            this.context = context;
+            this.uri = uri;
+        }
+
+        public Resource getResource() {
+            if( data != null ) {
+                return new Resource( context, data, uri );
+            }
+            else if( file != null ) {
+                return new FileResource( context, file, uri );
+            }
+            return null;
         }
 
         @Override
         public void respondWithData(byte[] data, String mimeType) {
-            super.data = data;
+            this.data = data;
         }
 
         @Override
         public void respondWithStringData(String data, String mimeType) {
-            super.data = data;
+            this.data = data;
         }
 
         @Override
         public void respondWithJSONData(Object data) {
-            super.data = data;
+            this.data = data;
         }
 
         @Override
         public void respondWithFileData(File file, String mimeType) {
-            try {
-                super.data = Files.readData( file );
-            }
-            catch(FileNotFoundException e) {
-                respondWithError( e.getMessage() );
-            }
+            this.file = file;
         }
 
         @Override
@@ -136,7 +151,7 @@ public class ContentScheme implements URIScheme {
 
         @Override
         public void end() {
-            super.data = buffer.toByteArray();
+            this.data = buffer.toByteArray();
             buffer = null;
         }
     }

@@ -29,6 +29,9 @@ import com.innerfunction.util.Files;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.URL;
 import java.util.Map;
 
 /**
@@ -207,6 +210,23 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     @Override
     public void startService() {
         commandScheduler.startService();
+        // Register an authenticator for HTTP requests. This delegates password requests to each
+        // registered content authority, by iterating over the authorities until one provides
+        // credentials.
+        Authenticator.setDefault( new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                PasswordAuthentication pa = null;
+                String authRealm = getRequestingPrompt();
+                URL url = getRequestingURL();
+                for( Authority authority : authorities.values() ) {
+                    pa = authority.getPasswordAuthentication( authRealm, url );
+                    if( pa != null ) {
+                        break;
+                    }
+                }
+                return pa;
+            }
+        });
     }
 
     @Override

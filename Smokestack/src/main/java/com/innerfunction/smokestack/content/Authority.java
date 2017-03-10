@@ -20,6 +20,8 @@ import android.os.CancellationSignal;
 import com.innerfunction.uri.CompoundURI;
 
 import java.io.File;
+import java.net.PasswordAuthentication;
+import java.net.URL;
 import java.util.Map;
 
 /**
@@ -97,5 +99,15 @@ public interface Authority {
      * @return An object encapsulating the required data.
      */
     Object getContent(CompoundURI uri, String path, Map<String,Object> params);
+
+    /**
+     * Return password details suitable for authenticating an HTTP request.
+     * May return null if the request isn't relevant to the authority.
+     * @param authRealm The HTTP authentication realm.
+     * @param url       The request URL.
+     * @return An object encapsulating username and password details, or null if no credentials are
+     *         available.
+     */
+    PasswordAuthentication getPasswordAuthentication(String authRealm, URL url);
 
 }

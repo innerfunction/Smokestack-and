@@ -17,12 +17,11 @@ import com.innerfunction.http.Client;
 import com.innerfunction.http.Response;
 import com.innerfunction.q.Q;
 import com.innerfunction.smokestack.commands.Command;
+import com.innerfunction.smokestack.commands.CommandList;
 import com.innerfunction.smokestack.commands.CommandScheduler;
-import com.innerfunction.smokestack.commands.CommandScheduler.CommandItem;
 import com.innerfunction.util.Files;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.util.List;
 
 /**
@@ -55,8 +54,8 @@ public class DownloadZipCommand implements Command {
     }
 
     @Override
-    public Q.Promise<List<CommandItem>> execute(String name, List args) {
-        final Q.Promise<List<CommandItem>> promise = new Q.Promise<>();
+    public Q.Promise<CommandList> execute(String name, List args) {
+        final Q.Promise<CommandList> promise = new Q.Promise<>();
         if( args.size() > 1 ) {
             // Read arguments.
             final String url = args.get( 0 ).toString();
@@ -66,32 +65,27 @@ public class DownloadZipCommand implements Command {
                 ? args.get( 2 ).toString()
                 : "no";
             // Start the download.
-            try {
-                httpClient.getFile( url )
-                    .then( new Q.Promise.Callback<Response, Response>() {
-                        @Override
-                        public Response result(Response response) {
-                            // Unzip the downloaded file.
-                            File unzipDir = new File( unzipPath );
-                            if( Files.unzip( response.getDataFile(), unzipDir ) != null ) {
-                                promise.resolve( CommandScheduler.NoFollowOns );
-                            }
-                            else {
-                                promise.reject("Failed to unzip download");
-                            }
-                            return response;
+            httpClient.getFile( url )
+                .then( new Q.Promise.Callback<Response, Response>() {
+                    @Override
+                    public Response result(Response response) {
+                        // Unzip the downloaded file.
+                        File unzipDir = new File( unzipPath );
+                        if( Files.unzip( response.getDataFile(), unzipDir ) != null ) {
+                            promise.resolve( CommandScheduler.NoFollowOns );
                         }
-                    } )
-                    .error( new Q.Promise.ErrorCallback() {
-                        public void error(Exception e) {
-                            String msg = String.format("Download from %s failed: %s", url, e.getMessage());
-                            promise.reject( msg );
+                        else {
+                            promise.reject("Failed to unzip download");
                         }
-                    });
-            }
-            catch(MalformedURLException e) {
-                promise.reject( e );
-            }
+                        return response;
+                    }
+                } )
+                .error( new Q.Promise.ErrorCallback() {
+                    public void error(Exception e) {
+                        String msg = String.format("Download from %s failed: %s", url, e.getMessage());
+                        promise.reject( msg );
+                    }
+                });
         }
         else {
             promise.reject("Incorrect number of arguments");

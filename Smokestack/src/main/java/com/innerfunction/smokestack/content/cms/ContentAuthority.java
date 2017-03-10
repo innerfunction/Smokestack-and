@@ -18,6 +18,9 @@ import android.content.Context;
 import com.innerfunction.smokestack.content.AbstractAuthority;
 import com.innerfunction.smokestack.content.AuthenticationManager;
 
+import java.net.PasswordAuthentication;
+import java.net.URL;
+
 /**
  * A class representing a content repository in the Smokestack CMS.
  * TODO: Should this be called Repository? ContentRepository?
@@ -25,28 +28,56 @@ import com.innerfunction.smokestack.content.AuthenticationManager;
  */
 public class ContentAuthority extends AbstractAuthority {
 
+    private Settings cms;
+    private AuthenticationManager authManager;
+    private String logoutAction;
+    private FileDB fileDB;
+
     public ContentAuthority(Context context) {
         super( context );
     }
 
+    public void setCMS(Settings cms) {
+        this.cms = cms;
+    }
+
     public Settings getCMS() {
+        return cms;
     }
 
     public AuthenticationManager getAuthManager() {
+        return authManager;
+    }
 
+    public void setLogoutAction(String logoutAction) {
+        this.logoutAction = logoutAction;
     }
 
     public String getLogoutAction() {
+        return logoutAction;
+    }
 
+    public void setFileDB(FileDB fileDB) {
+        this.fileDB = fileDB;
     }
 
     public FileDB getFileDB() {
-
+        return fileDB;
     }
 
     @Override
     public void refreshContent() {
 
+    }
+
+    @Override
+    public PasswordAuthentication getPasswordAuthentication(String realm, URL url) {
+        // Return the user's stored credentials, if any, if the request is for this authority's
+        // configured HTTP authentication realm.
+        if( realm != null && realm.equals( getCMS().getAuthRealm() ) ) {
+            return getAuthManager().getPasswordAuthentication();
+        }
+        return null;
     }
 
 }
