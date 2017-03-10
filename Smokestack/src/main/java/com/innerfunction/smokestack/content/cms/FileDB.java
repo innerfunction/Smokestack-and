@@ -28,13 +28,13 @@ import java.util.Map;
 public class FileDB extends DB {
 
     /** The content authority this database belongs to. */
-    private ContentAuthority authority;
+    private Repository authority;
     /** The fileset categories defined for the database. */
     private Map<String,Fileset> filesets;
     /** The name of the files table; defaults to 'files'. */
     private String filesTable = "files";
 
-    public FileDB(ContentAuthority authority) {
+    public FileDB(Repository authority) {
         this.authority = authority;
     }
 

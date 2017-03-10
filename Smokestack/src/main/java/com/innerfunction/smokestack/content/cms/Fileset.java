@@ -17,7 +17,7 @@ import com.innerfunction.scffld.IOCObjectAware;
 import com.innerfunction.smokestack.content.Authority;
 import com.innerfunction.util.Paths;
 
-import org.json.JSONArray;
+import org.json.simple.JSONArray;
 
 /**
  * A class declaring the options available on a fileset database configuration entry.
@@ -46,9 +46,29 @@ public class Fileset implements IOCObjectAware {
     /** A flag indicating whether a fileset's content should be downloaded and cached. */
     private boolean cachable;
 
+    public void setMappings(JSONArray mappings) {
+        this.mappings = mappings;
+    }
+
+    public JSONArray getMappings() {
+        return mappings;
+    }
+
     public void setCache(String cache) {
         this.cache = cache;
         this.cachable = "content".equals( cache ) || "app".equals( cache );
+    }
+
+    public String getCache() {
+        return cache;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     /** Get the path of the cache location for this fileset. */

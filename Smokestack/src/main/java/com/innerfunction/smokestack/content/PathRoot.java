@@ -13,6 +13,9 @@
 // limitations under the License
 package com.innerfunction.smokestack.content;
 
+import android.database.Cursor;
+import android.os.CancellationSignal;
+
 import java.util.Map;
 
 /**
@@ -24,12 +27,24 @@ import java.util.Map;
 public interface PathRoot {
 
     /**
-     * Generate and write a content response.
+     * Generate and write a file based content response.
      * @param authority The authority handling the content request.
      * @param path      The (parsed) path to the requested content.
      * @param params    The (parsed) content request parameters.
      * @param response  An object to write the response to.
      */
     void writeResponse(Authority authority, ContentPath path, Map<String,Object> params, AuthorityResponse response);
+
+    /**
+     * Make and return a cursor based content response.
+     * @param authority     The authority handling the content request.
+     * @param path          The (parsed) path to the requested content.
+     * @param projection    A list of fields to include in the result.
+     * @param selection     A selection statement.
+     * @param args          Arguments to the selection statement.
+     * @param order         The result sort order.
+     * @param signal        An object used to signal request cancellation.
+     */
+    Cursor getCursor(Authority authority, ContentPath path, String[] projection, String selection, String[] args, String order, CancellationSignal signal);
 
 }

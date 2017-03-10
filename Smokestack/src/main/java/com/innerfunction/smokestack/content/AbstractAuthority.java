@@ -17,13 +17,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
+import android.util.Log;
 
 import com.innerfunction.scffld.IOCObjectAware;
 import com.innerfunction.scffld.Service;
 import com.innerfunction.uri.CompoundURI;
 import com.innerfunction.util.Paths;
-
-import static com.innerfunction.util.DataLiterals.*;
 
 import java.io.File;
 import java.util.HashMap;
@@ -34,15 +33,14 @@ import java.util.Map;
  * This class provides standard functionality needed to service requests from the different
  * content URL and resolver subsystems and the content internal URI scheme.
  *
- * All requests are forwarded to the writeResponse(..) method, which in turn looks up a PathRoot
- * object for the request path and delegates the request to that.
- *
  * Subclasses must provide an implementation of the refreshContent() method suitable for their
  * data source.
  *
  * Created by juliangoacher on 08/03/2017.
  */
 public abstract class AbstractAuthority implements Authority, Service, IOCObjectAware {
+
+    static final String Tag = AbstractAuthority.class.getSimpleName();
 
     /** The app context. */
     private Context context;
@@ -138,16 +136,24 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] args, String order, CancellationSignal signal) {
-        CursorAuthorityResponse response = new CursorAuthorityResponse( signal );
-        // TODO Need to consider how to reconcile these params with the other methods.
-        Map<String,Object> params = m(
-            kv("selection",     selection ),
-            kv("projection",    projection ),
-            kv("args",          args ),
-            kv("order",         order )
-        );
-        writeResponse( response, uri.getPath(), params );
-        return response.getCursor();
+        Cursor cursor = null;
+        ContentPath contentPath = new ContentPath( uri.getPath() );
+        // Look-up a path root for the first path component, and if one is found then delegate the
+        // request to it.
+        String root = contentPath.getRoot();
+        PathRoot pathRoot = pathRoots.get( root );
+        if( pathRoot != null ) {
+            // The path root only sees the rest of the path.
+            contentPath = contentPath.getRest();
+            // Delegate the request.
+            cursor = pathRoot.getCursor( this, contentPath, projection, selection, args, order, signal );
+        }
+        else {
+            // Path not found, respond with error.
+            String error = String.format("Path not found: %s", contentPath.getFullPath() );
+            Log.w( Tag, error );
+        }
+        return cursor;
     }
 
     @Override

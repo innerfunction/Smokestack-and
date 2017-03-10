@@ -110,4 +110,14 @@ public interface Authority {
      */
     PasswordAuthentication getPasswordAuthentication(String authRealm, URL url);
 
+    /**
+     * Return the content converter for a specified record type.
+     */
+    RecordConverter getRecordTypeConverter(String type);
+
+    /**
+     * Return the content converter for a specified query type.
+     */
+    QueryConverter getQueryTypeConverter(String type);
+
 }

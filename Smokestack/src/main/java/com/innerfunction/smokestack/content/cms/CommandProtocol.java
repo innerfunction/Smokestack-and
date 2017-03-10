@@ -60,7 +60,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
     private Client httpClient;
 
 
-    public CommandProtocol(ContentAuthority authority) {
+    public CommandProtocol(Repository authority) {
         this.cms = authority.getCMS();
         this.authManager = authority.getAuthManager();
         this.logoutAction = authority.getLogoutAction();

@@ -70,6 +70,13 @@ public class ORM implements IOCObjectAware {
 
     /**
      * Select the objects matching the specified where condition.
+     */
+    public ResultSet selectWhere(List<String> mappings, String where, String... values) {
+        return selectWhere( mappings, where, Arrays.asList( values ) );
+    }
+
+    /**
+     * Select the objects matching the specified where condition.
      * Returns an array of object records from the source table, with all related properties
      * named in the mappings argument joined from the related tables.
      */

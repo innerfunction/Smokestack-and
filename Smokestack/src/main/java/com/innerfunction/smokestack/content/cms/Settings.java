@@ -17,6 +17,7 @@ import com.innerfunction.util.Paths;
 
 /**
  * A class representing a Smokestack content repository's settings.
+ * TODO: Support username + password settings also.
  *
  * Created by juliangoacher on 08/03/2017.
  */

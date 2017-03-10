@@ -23,17 +23,17 @@ import java.net.URL;
 
 /**
  * A class representing a content repository in the Smokestack CMS.
- * TODO: Should this be called Repository? ContentRepository?
+ *
  * Created by juliangoacher on 09/03/2017.
  */
-public class ContentAuthority extends AbstractAuthority {
+public class Repository extends AbstractAuthority {
 
     private Settings cms;
     private AuthenticationManager authManager;
     private String logoutAction;
     private FileDB fileDB;
 
-    public ContentAuthority(Context context) {
+    public Repository(Context context) {
         super( context );
     }
 

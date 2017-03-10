@@ -75,6 +75,11 @@ public class ContentPath {
         return new ContentPath( path, rootIdx + 1, ext );
     }
 
+    /** Return the length of the path. */
+    public int length() {
+        return path.size() - rootIdx;
+    }
+
     /** Return a list containing the root component and all path components following it. */
     private List<String> getComponents() {
         return path.subList( rootIdx, path.size() - 1 );
