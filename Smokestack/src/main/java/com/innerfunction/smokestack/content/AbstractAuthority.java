@@ -55,6 +55,10 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
      * For example, given the path files/all, the path root is 'files'.
      */
     private Map<String,PathRoot> pathRoots;
+    /** A map of record converters, keyed by record type name. */
+    private Map<String,RecordConverter> recordTypes = new HashMap<>();
+    /** A map of query converters, keyed by record type name. */
+    private Map<String,QueryConverter> queryTypes = new HashMap<>();
 
     public AbstractAuthority(Context context) {
         this.context = context;
@@ -63,6 +67,20 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
     public void setRefreshInterval(float interval) {
         this.refreshInterval = interval;
     }
+
+    public void setRecordTypes(Map<String,RecordConverter> recordTypes) {
+        this.recordTypes = recordTypes;
+    }
+
+    public void setQueryTypes(Map<String,QueryConverter> queryTypes) {
+        this.queryTypes = queryTypes;
+    }
+
+    /**
+     * Refreshed content, e.g. by checking a server for downloadable updates.
+     * Subclasses should provide an implementation of this class.
+     */
+    public abstract void refreshContent();
 
     /** A path for temporarily staging downloaded content. */
     @Override
@@ -87,12 +105,6 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
     public String getPackagedContentPath() {
         return Paths.join( contentProvider.getPackagedContentPath(), authorityName );
     }
-
-    /**
-     * Refreshed content, e.g. by checking a server for downloadable updates.
-     * Subclasses should provide an implementation of this class.
-     */
-    public abstract void refreshContent();
 
     public void writeResponse(AuthorityResponse response, String path, Map<String,Object> params) {
         ContentPath contentPath = new ContentPath( path );
@@ -161,6 +173,16 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
         ContentScheme.AuthorityResponse response = new ContentScheme.AuthorityResponse( context, uri );
         writeResponse( response, path, params );
         return response.getResource();
+    }
+
+    @Override
+    public RecordConverter getRecordTypeConverter(String type) {
+        return recordTypes.get( type );
+    }
+
+    @Override
+    public QueryConverter getQueryTypeConverter(String type) {
+        return queryTypes.get( type );
     }
 
     @Override

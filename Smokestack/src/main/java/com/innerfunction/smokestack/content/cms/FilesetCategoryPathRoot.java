@@ -46,13 +46,17 @@ import java.util.Map;
 public class FilesetCategoryPathRoot implements PathRoot {
 
     /** The fileset being accessed. */
-    private Fileset fileset;
+    protected Fileset fileset;
     /** The content repository. */
-    private Repository repository;
+    protected Repository repository;
     /** The file database. */
-    private FileDB fileDB;
+    protected FileDB fileDB;
     /** The file DB's object-relation mapping layer. */
-    private ORM orm;
+    protected ORM orm;
+    /** An HTTP client. */
+    protected Client httpClient;
+
+    public FilesetCategoryPathRoot() {}
 
     /** Initialize the path root with the specified fileset and content authority. */
     public FilesetCategoryPathRoot(Fileset fileset, Repository repository) {
@@ -67,11 +71,16 @@ public class FilesetCategoryPathRoot implements PathRoot {
     public void setRepository(Repository repository) {
         this.repository = repository;
         setFileDB( repository.getFileDB() );
+        setHttpClient( repository.getHttpClient() );
     }
 
     public void setFileDB(FileDB fileDB) {
         this.fileDB = fileDB;
         this.orm = fileDB.getORM();
+    }
+
+    public void setHttpClient(Client httpClient) {
+        this.httpClient = httpClient;
     }
 
     /** Query the file database for entries in the current fileset. */
@@ -116,7 +125,7 @@ public class FilesetCategoryPathRoot implements PathRoot {
     /** Write a query response. */
     public void writeQueryContent(ResultSet content, String type, AuthorityResponse response) {
         if( type != null ) {
-            QueryConverter typeConverter = repository.getQueryTypeConvertor( type );
+            QueryConverter typeConverter = repository.getQueryTypeConverter( type );
             if( typeConverter != null ) {
                 typeConverter.writeContent( content, response );
             }
@@ -154,7 +163,6 @@ public class FilesetCategoryPathRoot implements PathRoot {
                     else {
                         // No local copy found, download from server.
                         String url = repository.getCMS().getURLForFile( path );
-                        Client httpClient = repository.getHTTPClient();
                         httpClient.getFile( url )
                             .then( new Q.Promise.Callback<Response, Response>() {
                                 @Override

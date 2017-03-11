@@ -15,6 +15,7 @@ package com.innerfunction.smokestack.content.cms;
 
 import android.content.Context;
 
+import com.innerfunction.http.Client;
 import com.innerfunction.smokestack.content.AbstractAuthority;
 import com.innerfunction.smokestack.content.AuthenticationManager;
 
@@ -28,13 +29,20 @@ import java.net.URL;
  */
 public class Repository extends AbstractAuthority {
 
+    /** The content repository settings. */
     private Settings cms;
-    private AuthenticationManager authManager;
-    private String logoutAction;
+    /** The file database. */
     private FileDB fileDB;
+    /** An HTTP client. */
+    private Client httpClient;
+    /** An object for managing user authentication credentials etc. */
+    private AuthenticationManager authManager;
+    /** An action to be posted after logging out a user. */
+    private String logoutAction;
 
     public Repository(Context context) {
         super( context );
+        this.httpClient = new Client( context );
     }
 
     public void setCMS(Settings cms) {
@@ -63,6 +71,10 @@ public class Repository extends AbstractAuthority {
 
     public FileDB getFileDB() {
         return fileDB;
+    }
+
+    public Client getHttpClient() {
+        return httpClient;
     }
 
     @Override
