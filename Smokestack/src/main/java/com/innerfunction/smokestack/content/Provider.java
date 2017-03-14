@@ -141,7 +141,7 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
      * @param uri The content URI to be serviced.
      * @return A content authority instance; or null if none is found.
      */
-    protected Authority getContentAuthority(Uri uri) {
+    public Authority getContentAuthority(Uri uri) {
         String authorityName = uri.getAuthority();
         Authority authority = authorities.get( authorityName );
         if( authority == null ) {
@@ -155,7 +155,7 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
      * @param authorityName The name of the required content authority.
      * @return The authority bound to the specified name, or null if it can't be found.
      */
-    protected Authority getContentAuthority(String authorityName) {
+    public Authority getContentAuthority(String authorityName) {
         Authority authority = authorities.get( authorityName );
         if( authority == null ) {
             Log.w( Tag, String.format("Content authority '%s' not found", authorityName ) );

@@ -21,6 +21,8 @@ import static com.innerfunction.util.DataLiterals.kv;
 import static com.innerfunction.util.DataLiterals.m;
 
 /**
+ * The Smokestack content app container.
+ *
  * Created by juliangoacher on 07/03/2017.
  */
 

@@ -22,6 +22,7 @@ import com.innerfunction.scffld.Configuration;
 import com.innerfunction.scffld.Container;
 import com.innerfunction.scffld.IOCContainerAware;
 import com.innerfunction.scffld.IOCObjectAware;
+import com.innerfunction.scffld.IOCProxyLookup;
 import com.innerfunction.scffld.Message;
 import com.innerfunction.scffld.MessageReceiver;
 import com.innerfunction.smokestack.commands.CommandScheduler;
@@ -234,6 +235,11 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
         getCommandScheduler().setCommand( getAuthorityName(), new CommandProtocol( this ) );
         // Refresh the app content on start.
         refreshContent();
+    }
+
+    static {
+        // Register this class' configuration proxy.
+        IOCProxyLookup.registerProxyClass( Repository.IOCProxy.class, Repository.class );
     }
 
     public static final class IOCProxy implements com.innerfunction.scffld.IOCProxy, IOCObjectAware, IOCContainerAware {

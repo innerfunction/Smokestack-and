@@ -235,34 +235,27 @@ public class FormView extends ScrollView {
         if( ok ) {
             if( submitURL != null && httpClient != null ) {
                 showSubmittingAppearance( true );
-                try {
-                    httpClient.submit( method, submitURL, getInputValues() )
-                        .then( new Q.Promise.Callback<Response, Response>() {
-                            @Override
-                            public Response result(Response response) {
-                                Map<String, Object> data = (Map<String,Object>)response.parseBodyData();
-                                if( isSubmitErrorResponse( response ) ) {
-                                    delegate.onSubmitError( FormView.this, data );
-                                }
-                                else {
-                                    delegate.onSubmitOk( FormView.this, data );
-                                }
-                                showSubmittingAppearance( false );
-                                return response;
+                httpClient.submit( method, submitURL, getInputValues() )
+                    .then( new Q.Promise.Callback<Response, Response>() {
+                        @Override
+                        public Response result(Response response) {
+                            Map<String, Object> data = (Map<String,Object>)response.parseBodyData();
+                            if( isSubmitErrorResponse( response ) ) {
+                                delegate.onSubmitError( FormView.this, data );
                             }
-                        })
-                        .error( new Q.Promise.ErrorCallback() {
-                            public void error(Exception e) {
-                                delegate.onSubmitRequestException( FormView.this, e );
-                                showSubmittingAppearance( false );
+                            else {
+                                delegate.onSubmitOk( FormView.this, data );
                             }
-                        });
-                }
-                catch(MalformedURLException e) {
-                    Log.e(Tag, String.format("Bad submitURL %s", submitURL ));
-                    showSubmittingAppearance( false );
-                    ok = false;
-                }
+                            showSubmittingAppearance( false );
+                            return response;
+                        }
+                    })
+                    .error( new Q.Promise.ErrorCallback() {
+                        public void error(Exception e) {
+                            delegate.onSubmitRequestException( FormView.this, e );
+                            showSubmittingAppearance( false );
+                        }
+                    });
             }
             else if( submitURI != null ) {
                 showSubmittingAppearance( true );
