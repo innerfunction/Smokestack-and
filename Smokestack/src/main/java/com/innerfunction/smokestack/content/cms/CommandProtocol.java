@@ -22,7 +22,6 @@ import com.innerfunction.smokestack.AppContainer;
 import com.innerfunction.smokestack.commands.Command;
 import com.innerfunction.smokestack.commands.CommandList;
 import com.innerfunction.smokestack.commands.CommandScheduler;
-import com.innerfunction.smokestack.content.AuthenticationManager;
 import com.innerfunction.smokestack.db.Record;
 import com.innerfunction.smokestack.db.ResultSet;
 import com.innerfunction.util.Files;

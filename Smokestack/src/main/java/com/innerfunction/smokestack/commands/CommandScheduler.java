@@ -182,6 +182,36 @@ public class CommandScheduler implements Service {
         }
     }
 
+    /** Interrupt normal processing and execute a new command immediately. */
+    public Q.Promise<Boolean> execCommand(String command, String... args) {
+        final CommandItem commandItem = new CommandItem( command, args );
+        commandItem.promise = new Q.Promise<>();
+        Runnable execCommand = new Runnable() {
+           public void run() {
+               // Replace the exec queue with a new queue containing just the new command; any
+               // other queued commands will be reloaded from the database afterwards (although
+               // note that this means that two or more asynchronous calls to this method can't be
+               // used reliably, as they may result in one call removing the other queued call;
+               // this shouldn't be a problem in practice though). Note that this part of the code
+               // is run on the queue, to avoid race conditions on the queue.
+               execQueue = Arrays.asList( commandItem );
+               execIdx = 0;
+               executeNextCommand();
+           }
+        };
+        // TODO: Review need for the following structure.
+        // The test done here on the current thread is taken from the iOS code, where it is
+        // needed to avoid a deadlock situation in GCD; it needs to be reviewed whether it is
+        // needed here.
+        if( ExecRunQueue.isRunningOnQueueThread() ) {
+            execCommand.run();
+        }
+        else {
+            ExecRunQueue.dispatch( execCommand );
+        }
+        return commandItem.promise;
+    }
+
     /** Purge the current execution queue. */
     public void purgeQueue() {
         // Clear the execution queue, delete all queued commands.
@@ -257,7 +287,7 @@ public class CommandScheduler implements Service {
                 execIdx++;
                 // Find and execute the command.
                 Log.d( Tag, String.format("Executing %s %s", commandItem.name, commandItem.args ) );
-                Command command = commands.get( commandItem.name );
+                final Command command = commands.get( commandItem.name );
                 if( command == null ) {
                     Log.e( Tag, String.format("Command not found: %s", commandItem.name ) );
                     purgeQueue();
@@ -300,6 +330,10 @@ public class CommandScheduler implements Service {
                                         db.insert("queue", values );
                                     }
                                     continueQueueProcessingAfterCommand( commandItem.rowID );
+                                    // Resolve command item promise, if any.
+                                    if( commandItem.promise != null ) {
+                                        commandItem.promise.resolve( true );
+                                    }
                                 }
                             } );
                             return null;
@@ -313,6 +347,10 @@ public class CommandScheduler implements Service {
                             // deal with accordingly.
                             // purgeQueue();
                             continueQueueProcessingAfterCommand( commandItem.rowID );
+                            // Reject the command item promise, if any.
+                            if( commandItem.promise != null ) {
+                                commandItem.promise.reject( e );
+                            }
                         }
                     } );
             }

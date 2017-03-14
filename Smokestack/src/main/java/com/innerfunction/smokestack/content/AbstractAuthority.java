@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.innerfunction.scffld.IOCObjectAware;
 import com.innerfunction.scffld.Service;
+import com.innerfunction.smokestack.commands.CommandScheduler;
 import com.innerfunction.uri.CompoundURI;
 import com.innerfunction.util.Paths;
 
@@ -76,6 +77,18 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
         this.queryTypes = queryTypes;
     }
 
+    public String getAuthorityName() {
+        return authorityName;
+    }
+
+    public Provider getContentProvider() {
+        return contentProvider;
+    }
+
+    public CommandScheduler getCommandScheduler() {
+        return contentProvider.getCommandScheduler();
+    }
+
     /**
      * Refreshed content, e.g. by checking a server for downloadable updates.
      * Subclasses should provide an implementation of this class.
@@ -106,8 +119,7 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
         return Paths.join( contentProvider.getPackagedContentPath(), authorityName );
     }
 
-    public void writeResponse(AuthorityResponse response, String path, Map<String,Object> params) {
-        ContentPath contentPath = new ContentPath( path );
+    public void writeResponse(AuthorityResponse response, ContentPath contentPath, Map<String,Object> params) {
         // Look-up a path root for the first path component, and if one is found then delegate the
         // request to it.
         String root = contentPath.getRoot();
@@ -142,7 +154,8 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
         for( String name : uri.getQueryParameterNames() ) {
             params.put( name, uri.getQueryParameter( name ) );
         }
-        writeResponse( response, uri.getPath(), params );
+        ContentPath contentPath = new ContentPath( uri.getPath() );
+        writeResponse( response, contentPath, params );
         return response.getContentFile();
     }
 
@@ -171,7 +184,8 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
     @Override
     public Object getContent(CompoundURI uri, String path, Map<String, Object> params) {
         ContentScheme.AuthorityResponse response = new ContentScheme.AuthorityResponse( context, uri );
-        writeResponse( response, path, params );
+        ContentPath contentPath = new ContentPath( path );
+        writeResponse( response, contentPath, params );
         return response.getResource();
     }
 

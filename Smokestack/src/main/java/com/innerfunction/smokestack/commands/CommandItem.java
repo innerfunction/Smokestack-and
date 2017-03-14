@@ -15,6 +15,8 @@ package com.innerfunction.smokestack.commands;
 
 import android.util.Log;
 
+import com.innerfunction.q.Q;
+
 import org.json.simple.JSONValue;
 
 import java.util.Arrays;
@@ -36,6 +38,8 @@ public class CommandItem {
     List args;
     /** The command's execution priority. */
     Integer priority;
+    /** An optional promise to be resolved once the command item is executed. */
+    Q.Promise<Boolean> promise;
 
     /** Instantiate an empty command item. */
     CommandItem() {}
