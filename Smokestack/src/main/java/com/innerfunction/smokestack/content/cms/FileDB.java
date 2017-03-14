@@ -42,6 +42,10 @@ public class FileDB extends DB {
         this.filesets = filesets;
     }
 
+    public Map<String,Fileset> getFilesets() {
+        return filesets;
+    }
+
     public void setFilesTable(String table) {
         this.filesTable = table;
     }

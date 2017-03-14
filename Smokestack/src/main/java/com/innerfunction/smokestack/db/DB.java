@@ -77,6 +77,11 @@ public class DB implements Service, IOCContextAware {
     private Map<String,Table> tables;
     /** Object/relational mappings defined for the database. */
     private ORM orm;
+    /**
+     * The path to an initial copy of the database.
+     * If specified, then this will be copied before the database is first used.
+     */
+    private String initialCopyPath;
 
     public DB() {
         this.name = "semo";
@@ -157,6 +162,14 @@ public class DB implements Service, IOCContextAware {
 
     public void setORM(ORM orm) {
         this.orm = orm;
+    }
+
+    public String getInitialCopyPath() {
+        return initialCopyPath;
+    }
+
+    public void setInitialCopyPath(String path) {
+        this.initialCopyPath = path;
     }
 
     /**
@@ -644,6 +657,15 @@ public class DB implements Service, IOCContextAware {
         if( resetDatabase ) {
             Log.w( Tag, String.format( "Resetting database %s", name ) );
             androidContext.deleteDatabase( name );
+        }
+        // Check whether to deploy a packaged database.
+        if( initialCopyPath != null ) {
+            File dbPath = androidContext.getDatabasePath( name );
+            if( !dbPath.exists() ) {
+                // No database file found, copy initial copy to db location.
+                Files files = new Files( androidContext );
+                files.mvFileRef( initialCopyPath, dbPath.getAbsolutePath() );
+            }
         }
         this.db = helper.getWritableDatabase();
     }

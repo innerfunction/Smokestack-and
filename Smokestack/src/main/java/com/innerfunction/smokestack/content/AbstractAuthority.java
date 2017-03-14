@@ -89,6 +89,10 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
         return contentProvider.getCommandScheduler();
     }
 
+    public void addPathRoot(String pathRootName, PathRoot pathRoot) {
+        pathRoots.put( pathRootName, pathRoot );
+    }
+
     /**
      * Refreshed content, e.g. by checking a server for downloadable updates.
      * Subclasses should provide an implementation of this class.
