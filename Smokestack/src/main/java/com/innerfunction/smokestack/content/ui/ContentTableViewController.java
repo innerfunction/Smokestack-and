@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.innerfunction.scffld.Configuration;
 import com.innerfunction.scffld.app.AppContainer;
 import com.innerfunction.scffld.ui.table.TableViewController;
 import com.innerfunction.smokestack.content.DataFormatter;
@@ -65,20 +66,21 @@ public class ContentTableViewController extends TableViewController {
     }
 
     private void configureCell(ContentTableViewCell cell, NSIndexPath indexPath) {
-        ValueMap data = tableData.getRowDataForIndexPath( indexPath );
 
-        cell.setTitle( data.getString("title") );
+        Configuration data = tableData.getRowDataForIndexPath( indexPath );
+
+        cell.setTitle( data.getValueAsString("title") );
         if( showRowContent ) {
-            cell.setContent( data.getString("content") );
+            cell.setContent( data.getValueAsString("content") );
         }
 
-        int imageHeight = data.getNumber("imageHeight", rowImageHeight ).intValue();
+        int imageHeight = data.getValueAsNumber("imageHeight", rowImageHeight ).intValue();
         if( imageHeight == 0 ) {
             imageHeight = 40;
         }
         int defaultImageWidth = rowImageWidth != 0 ? rowImageWidth : imageHeight;
-        int imageWidth = data.getNumber("imageWidth", defaultImageWidth ).intValue();
-        Drawable image = tableData.loadImage( data.getString("image") ); // TODO Resize the image?
+        int imageWidth = data.getValueAsNumber("imageWidth", defaultImageWidth ).intValue();
+        Drawable image = tableData.loadImageWithRowData( data, "image" ); // TODO Resize the image?
         if( image == null ) {
             image = rowImage;
         }
@@ -97,7 +99,7 @@ public class ContentTableViewController extends TableViewController {
             cell.getImageView().setImageDrawable( null );
         }
 
-        if( !(this.action == null && data.getString("action") == null) ) {
+        if( !(this.action == null && data.getValueAsString("action") == null) ) {
             cell.setAccessoryType( ATableViewCellAccessoryView.ATableViewCellAccessoryType.DisclosureIndicator );
         }
         else {
@@ -151,13 +153,13 @@ public class ContentTableViewController extends TableViewController {
         return new ATableViewDelegate() {
             @Override
             public void didSelectRowAtIndexPath(com.nakardo.atableview.view.ATableView tableView, NSIndexPath indexPath) {
-                ValueMap rowData = tableData.getRowDataForIndexPath( indexPath );
-                String action = rowData.getString("action");
+                Configuration rowData = tableData.getRowDataForIndexPath( indexPath );
+                String action = rowData.getValueAsString("action");
                 String _action = ContentTableViewController.this.action;
                 if( action == null && _action != null ) {
                     // If no action on cell data, but action defined on table then eval as a
                     // template on the cell data.
-                    action = StringTemplate.render( _action, rowData.getValues() );
+                    action = StringTemplate.render( _action, rowData.getData() );
                 }
                 if( action != null ) {
                     AppContainer.getAppContainer().postMessage( action, ContentTableViewController.this );
