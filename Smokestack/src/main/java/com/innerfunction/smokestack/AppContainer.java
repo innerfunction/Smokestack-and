@@ -25,7 +25,6 @@ import static com.innerfunction.util.DataLiterals.m;
  *
  * Created by juliangoacher on 07/03/2017.
  */
-
 public class AppContainer extends com.innerfunction.scffld.app.AppContainer {
 
     private Provider contentProvider;
@@ -45,23 +44,16 @@ public class AppContainer extends com.innerfunction.scffld.app.AppContainer {
     /** The app container's singleton instance. */
     static AppContainer Instance;
 
-    public static synchronized AppContainer getAppContainer(Context context) {
-        if( Instance == null ) {
-            Instance = new AppContainer( context );
-            Instance.loadConfiguration( m(
-                kv("types",             "@app:/SCFFLD/types.json"),
-                kv("schemes",           "@dirmap:/SCFFLD/schemes"),
-                kv("patterns",          "@dirmap:/SCFFLD/patterns"),
-                kv("nameds",            "@dirmap:/SCFFLD/nameds"),
-                kv("contentProvider", m(
-                    kv("authorities",   "@dirmap:/SCFFLD/repositories")
-                ))
-            ));
-        }
+    public static AppContainer initialize(Context context, Object configuration) {
+        Instance = new AppContainer( context );
+        com.innerfunction.scffld.app.AppContainer.initialize( Instance, configuration );
         return Instance;
     }
 
     public static AppContainer getAppContainer() {
+        if( Instance == null ) {
+            throw new IllegalStateException("App container not initialized");
+        }
         return Instance;
     }
 

@@ -7,6 +7,8 @@ import android.webkit.WebView;
 
 import com.innerfunction.scffld.app.ManifestMetaData;
 
+import static com.innerfunction.util.DataLiterals.*;
+
 /**
  * Base application class for Smokestack based apps.
  *
@@ -34,7 +36,16 @@ public class Application extends android.app.Application {
                 android.os.Debug.startMethodTracing("smokestack-trace");
             }
             // Configure and start the app container.
-            AppContainer appContainer = AppContainer.getAppContainer( getApplicationContext() );
+            Object configuration = m(
+                kv("types",             "@app:/SCFFLD/types.json"),
+                kv("schemes",           "@dirmap:/SCFFLD/schemes"),
+                kv("patterns",          "@dirmap:/SCFFLD/patterns"),
+                kv("nameds",            "@dirmap:/SCFFLD/nameds"),
+                kv("contentProvider", m(
+                    kv("authorities",   "@dirmap:/SCFFLD/repositories")
+                ))
+            );
+            AppContainer appContainer = AppContainer.initialize( getApplicationContext(), configuration );
             if( TraceEnabled ) {
                 android.os.Debug.stopMethodTracing();
             }
