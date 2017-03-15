@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.innerfunction.smokestack.commands.CommandScheduler.CommandItem;
-
 /**
  * A command protocol.
  * A command implementation that supports multiple different named commands, useful for
