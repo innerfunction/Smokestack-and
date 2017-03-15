@@ -57,7 +57,7 @@ public class ContentProvider extends android.content.ContentProvider {
 
     @Override
     public boolean onCreate() {
-        AppContainer appContainer = AppContainer.getAppContainer( getContext() );
+        AppContainer appContainer = AppContainer.getAppContainer();
         provider = appContainer.getContentProvider();
         if( provider == null ) {
             Log.w( Tag, "Unable to resolve content provider on app container");

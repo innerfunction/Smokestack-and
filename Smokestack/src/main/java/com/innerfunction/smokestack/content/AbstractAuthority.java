@@ -55,7 +55,7 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
      * A map of addressable path roots.
      * For example, given the path files/all, the path root is 'files'.
      */
-    private Map<String,PathRoot> pathRoots;
+    private Map<String,PathRoot> pathRoots = new HashMap<>();
     /** A map of record converters, keyed by record type name. */
     private Map<String,RecordConverter> recordTypes = new HashMap<>();
     /** A map of query converters, keyed by record type name. */

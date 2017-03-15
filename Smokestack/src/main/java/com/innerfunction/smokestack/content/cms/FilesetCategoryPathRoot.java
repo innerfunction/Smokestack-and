@@ -162,7 +162,7 @@ public class FilesetCategoryPathRoot implements PathRoot {
                     }
                     else {
                         // No local copy found, download from server.
-                        String url = repository.getCMS().getURLForFile( path );
+                        String url = repository.getCms().getURLForFile( path );
                         httpClient.getFile( url )
                             .then( new Q.Promise.Callback<Response, Response>() {
                                 @Override

@@ -66,12 +66,12 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
         this.fileDB = new FileDB( this );
     }
 
-    public void setCMS(Settings cms) {
+    public void setCms(Settings cms) {
         this.cms = cms;
         authManager.setCMSSettings( cms );
     }
 
-    public Settings getCMS() {
+    public Settings getCms() {
         return cms;
     }
 
@@ -359,7 +359,7 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
             this.fileDB = fileDB;
         }
 
-        public void setCMS(JSONObject cms) {
+        public void setCms(JSONObject cms) {
             this.cms = cms;
         }
 
