@@ -18,7 +18,6 @@ import android.text.TextUtils;
 import com.innerfunction.util.Regex;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +35,7 @@ public class DBFilter {
 
     public DBFilter() {}
 
-    public List<Map<String,Object>> applyTo(DB db, Map<String,Object> params) {
+    public ResultSet applyTo(DB db, Map<String,Object> params) {
         // Prepare the SQL. If the filter has been configured using table/filters/orderBy properties
         // then this.sql will be null on first call.
         if( this.sql == null && table != null ) {
@@ -92,7 +91,8 @@ public class DBFilter {
         }
         // If still no SQL then the filter hasn't been configured correctly.
         if( sql == null ) {
-            return Collections.EMPTY_LIST;
+            // Return an empty result set.
+            return new ResultSet();
         }
         // Construct parameters for the SQL query.
         List<String> sqlParams = new ArrayList<>();
@@ -106,7 +106,7 @@ public class DBFilter {
             }
         }
         // Execute the SQL and return the result.
-        List<Map<String,Object>> result = db.performQuery( sql, sqlParams );
+        ResultSet result = db.performQuery( sql, sqlParams );
         return result;
     }
 
