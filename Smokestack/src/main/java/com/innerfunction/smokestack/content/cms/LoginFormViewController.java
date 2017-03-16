@@ -55,8 +55,9 @@ public class LoginFormViewController extends FormViewController {
         FormView form = getForm();
         form.setDelegate( new FormView.Delegate() {
             @Override
-            public void onSubmitOk(final FormView form, Map<String,Object> data) {
+            public boolean onSubmit(final FormView form) {
                 Repository repository = getContentRepository();
+                Map<String, Object> data = form.getInputValues();
                 if( repository != null ) {
                     form.showSubmittingAppearance( true );
                     repository.loginWithCredentials( data )
@@ -76,6 +77,7 @@ public class LoginFormViewController extends FormViewController {
                             }
                         } );
                 }
+                return false;
             }
         });
 

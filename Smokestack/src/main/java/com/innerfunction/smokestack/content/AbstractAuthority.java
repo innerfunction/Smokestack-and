@@ -77,6 +77,10 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
         this.queryTypes = queryTypes;
     }
 
+    public void setAuthorityName(String authorityName) {
+        this.authorityName = authorityName;
+    }
+
     public String getAuthorityName() {
         return authorityName;
     }
@@ -212,12 +216,9 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
     }
 
     @Override
-    public void startService() {
-
-    }
+    public void startService() {}
 
     @Override
-    public void stopService() {
+    public void stopService() {}
 
-    }
 }

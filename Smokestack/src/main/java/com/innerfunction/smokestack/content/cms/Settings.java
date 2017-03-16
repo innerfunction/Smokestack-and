@@ -157,7 +157,7 @@ public class Settings {
 
     private String getURLForPath(String path) {
         String hostSuffix = port == 0 ? "" : ":"+Integer.toString( port );
-        return String.format("%s//%s%s/%s", protocol, host, hostSuffix, path );
+        return String.format("%s://%s%s/%s", protocol, host, hostSuffix, path );
     }
 
 }

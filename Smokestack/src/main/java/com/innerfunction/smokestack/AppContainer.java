@@ -15,6 +15,7 @@ package com.innerfunction.smokestack;
 
 import android.content.Context;
 
+import com.innerfunction.smokestack.content.ContentScheme;
 import com.innerfunction.smokestack.content.Provider;
 
 import static com.innerfunction.util.DataLiterals.kv;
@@ -28,9 +29,11 @@ import static com.innerfunction.util.DataLiterals.m;
 public class AppContainer extends com.innerfunction.scffld.app.AppContainer {
 
     private Provider contentProvider;
+    private ContentScheme contentScheme = new ContentScheme();
 
     public AppContainer(Context context) {
         super( context );
+        uriHandler.addHandlerForScheme("content", contentScheme );
     }
 
     public Provider getContentProvider() {
@@ -39,6 +42,7 @@ public class AppContainer extends com.innerfunction.scffld.app.AppContainer {
 
     public void setContentProvider(Provider provider) {
         this.contentProvider = provider;
+        contentScheme.setContentProvider( provider );
     }
 
     /** The app container's singleton instance. */

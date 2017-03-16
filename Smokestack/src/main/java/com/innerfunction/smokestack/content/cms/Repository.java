@@ -63,7 +63,7 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
         super( context );
         this.httpClient = new Client( context );
         this.authManager = new AuthenticationManager( context );
-        this.fileDB = new FileDB( this );
+        this.fileDB = new FileDB( context, this );
     }
 
     public void setCms(Settings cms) {
@@ -405,6 +405,7 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
             Repository repository = new Repository( context );
             container.configureObject( repository, config, authorityName );
             repository.setLogoutAction( logoutAction );
+            repository.setAuthorityName( authorityName );
 
             // By default, the initial copy of the db file is stored in the main app bundle under
             // the db name.

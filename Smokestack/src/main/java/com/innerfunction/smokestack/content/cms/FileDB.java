@@ -13,6 +13,8 @@
 // limitations under the License
 package com.innerfunction.smokestack.content.cms;
 
+import android.content.Context;
+
 import com.innerfunction.smokestack.db.DB;
 import com.innerfunction.smokestack.db.ORM;
 import com.innerfunction.smokestack.db.ResultSet;
@@ -34,7 +36,8 @@ public class FileDB extends DB {
     /** The name of the files table; defaults to 'files'. */
     private String filesTable = "files";
 
-    public FileDB(Repository authority) {
+    public FileDB(Context context, Repository authority) {
+        setAndroidContext( context );
         this.authority = authority;
     }
 

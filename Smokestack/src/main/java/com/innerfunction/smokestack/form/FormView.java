@@ -59,6 +59,14 @@ public class FormView extends ScrollView {
      * A delegate interface for handling certain form lifecycle events.
      */
     public static class Delegate {
+        /**
+         * Called when the form is about to be submitted.
+         * Subclasses can override this method to perform custom submit behaviour, including
+         * preventing the normal submit procedure by returning false.
+         */
+        public boolean onSubmit(FormView form) {
+            return true;
+        }
         /** Called after the form has submitted successfully. */
         public void onSubmitOk(FormView form, Map<String,Object> data) {}
         /** Called after the form has submitted but the server returns an error. */
@@ -232,6 +240,9 @@ public class FormView extends ScrollView {
      */
     public boolean submit() {
         boolean ok = validate();
+        if( ok ) {
+            ok = delegate.onSubmit( this );
+        }
         if( ok ) {
             if( submitURL != null && httpClient != null ) {
                 showSubmittingAppearance( true );
