@@ -42,15 +42,17 @@ public class CommandScheduler implements Service {
 
     static final String Tag = CommandScheduler.class.getSimpleName();
 
-    /**
-     * A queue used to run commands.
-     * All commands are run sequentially on the same background thread.
-     */
-    static final RunQueue ExecRunQueue = new RunQueue( Tag );
-
     /** Empty command list, used to indicate that a command has no follow on commands. */
     public static final CommandList NoFollowOns = new CommandList();
 
+    /**
+     * A queue used to run commands.
+     * All commands are run sequentially on the same background thread. Note that the queue is
+     * created in a non-running state, and is only started when the command scheduler service is
+     * started (i.e. see this class' startService() method). This is to ensure that no commands
+     * are executed before the service and its database are up and running.
+     */
+    private RunQueue execRunQueue;
     /** The queue database. */
     private DB db;
     /** A list of commands currently being executed. */
@@ -74,6 +76,8 @@ public class CommandScheduler implements Service {
     private boolean deleteExecutedQueueRecords = true;
 
     public CommandScheduler(Context androidContext) {
+        // Instantiate run queue in non-started state.
+        execRunQueue = new RunQueue( toString(), false );
         // Command database setup.
         db = new DB();
         db.setAndroidContext( androidContext );
@@ -92,6 +96,9 @@ public class CommandScheduler implements Service {
         commands.put("rm", new RmFileCommand() );
         commands.put("mv", new MvFileCommand() );
         commands.put("unzip", new UnzipCommand( androidContext ) );
+        // Execute any commands left on the queue from previous start (this won't run until the
+        // exec queue is started).
+        executeQueue();
     }
 
     /**
@@ -135,7 +142,7 @@ public class CommandScheduler implements Service {
             // Commands currently being executed from queue, leave these to be completed.
             return;
         }
-        ExecRunQueue.dispatch( new Runnable() {
+        execRunQueue.dispatch( new Runnable() {
             @Override
             public void run() {
                 // NOTE performQuery(String sql, Object... params);
@@ -153,7 +160,7 @@ public class CommandScheduler implements Service {
     /** Append a new command to the queue. */
     public void appendCommand(final String name, final List args) {
         Log.d( Tag, String.format("Appending %s %s", name, args ) );
-        ExecRunQueue.dispatch( new Runnable() {
+        execRunQueue.dispatch( new Runnable() {
             public void run() {
                 String argsJSON = JSONValue.toJSONString( args );
                 Map values = new HashMap<>();
@@ -203,11 +210,11 @@ public class CommandScheduler implements Service {
         // The test done here on the current thread is taken from the iOS code, where it is
         // needed to avoid a deadlock situation in GCD; it needs to be reviewed whether it is
         // needed here.
-        if( ExecRunQueue.isRunningOnQueueThread() ) {
+        if( execRunQueue.isRunningOnQueueThread() ) {
             execCommand.run();
         }
         else {
-            ExecRunQueue.dispatch( execCommand );
+            execRunQueue.dispatch( execCommand );
         }
         return commandItem.promise;
     }
@@ -231,11 +238,11 @@ public class CommandScheduler implements Service {
         };
         // If already running on the exec queue the run the purge synchronously; else add to end of
         // queue.
-        if( ExecRunQueue.isRunningOnQueueThread() ) {
+        if( execRunQueue.isRunningOnQueueThread() ) {
             purge.run();
         }
         else {
-            ExecRunQueue.dispatch( purge );
+            execRunQueue.dispatch( purge );
         }
     }
 
@@ -257,17 +264,17 @@ public class CommandScheduler implements Service {
         };
         // If already running on the exec queue the run the purge synchronously; else add to end of
         // queue.
-        if( ExecRunQueue.isRunningOnQueueThread() ) {
+        if( execRunQueue.isRunningOnQueueThread() ) {
             purge.run();
         }
         else {
-            ExecRunQueue.dispatch( purge );
+            execRunQueue.dispatch( purge );
         }
     }
 
     /** Execute the next command on the exec queue. */
     private void executeNextCommand() {
-        ExecRunQueue.dispatch( new Runnable() {
+        execRunQueue.dispatch( new Runnable() {
             @Override
             public void run() {
                 if( execQueue.size() == 0 ) {
@@ -296,7 +303,7 @@ public class CommandScheduler implements Service {
                 command.execute( commandItem.name, commandItem.args )
                     .then( new Q.Promise.Callback<CommandList, Object>() {
                         public Object result(final CommandList commands) {
-                            ExecRunQueue.dispatch( new Runnable() {
+                            execRunQueue.dispatch( new Runnable() {
                                 public void run() {
                                     // Queue any new commands, delete current command from db.
                                     db.beginTransaction();
@@ -420,9 +427,10 @@ public class CommandScheduler implements Service {
 
     @Override
     public void startService() {
+        // Start the database.
         db.startService();
-        // Execute any commands left on the queue from previous start.
-        executeQueue();
+        // Start the run queue.
+        execRunQueue.start();
     }
 
     @Override

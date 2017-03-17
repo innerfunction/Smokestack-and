@@ -89,16 +89,7 @@ public class DB implements Service, IOCContextAware {
         this.tables = new HashMap<>();
         this.resetDatabase = false;
     }
-/*
-    private DB(DB parent) {
-        this.name = parent.name;
-        this.version = parent.version;
-        this.tables = parent.tables;
-        this.androidContext = parent.androidContext;
-        this.taggedTableColumns = parent.taggedTableColumns;
-        this.tableColumnNames = parent.tableColumnNames;
-    }
-*/
+
     // IOCContextAware
     @Override
     public void setAndroidContext(Context context) {
@@ -156,11 +147,11 @@ public class DB implements Service, IOCContextAware {
         return tables;
     }
 
-    public ORM getORM() {
+    public ORM getOrm() {
         return orm;
     }
 
-    public void setORM(ORM orm) {
+    public void setOrm(ORM orm) {
         this.orm = orm;
     }
 
@@ -641,6 +632,7 @@ public class DB implements Service, IOCContextAware {
      * database (i.e. pre-built - table scheme is setup; pre-populated - initial data already
      * written). This will replace any in-situ database file.
      * @param source The path to the file to be copied.
+     * @deprecated Functionality duplicated in startService(); need to confirm this method no longer needed.
      */
     public void deployDBFile(String source) {
         stopService(); // Stop the service - this will close the current db connection.

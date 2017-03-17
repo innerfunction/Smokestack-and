@@ -114,7 +114,7 @@ public class FileDB extends DB {
     public boolean pruneRelatedValues() {
         boolean ok = true;
         // Read column names on source table.
-        ORM orm = getORM();
+        ORM orm = getOrm();
         String source = orm.getSource();
         String idColumn = getColumnForTag( source, "id");
         String verColumn = getColumnForTag( source, "version");

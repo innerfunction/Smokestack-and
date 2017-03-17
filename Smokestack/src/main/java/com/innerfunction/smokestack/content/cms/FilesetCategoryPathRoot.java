@@ -76,7 +76,7 @@ public class FilesetCategoryPathRoot implements PathRoot {
 
     public void setFileDB(FileDB fileDB) {
         this.fileDB = fileDB;
-        this.orm = fileDB.getORM();
+        this.orm = fileDB.getOrm();
     }
 
     public void setHttpClient(Client httpClient) {
@@ -107,7 +107,7 @@ public class FilesetCategoryPathRoot implements PathRoot {
         // Join the wheres into a single where clause.
         String where = TextUtils.join(" AND ", wheres );
         // Execute query and return result.
-        return fileDB.getORM().selectWhere( mappings, where, values );
+        return fileDB.getOrm().selectWhere( mappings, where, values );
     }
 
     /** Read a single entry from the file database by key (i.e. file ID). */

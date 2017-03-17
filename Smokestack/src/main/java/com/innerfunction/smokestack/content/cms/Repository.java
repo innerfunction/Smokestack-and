@@ -292,7 +292,7 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
                 ))
             )),
             kv("orm", m(
-                kv("source",    "files"),
+                kv("source", "files"),
                 kv("mappings", m(
                     kv("post", m(
                         kv("relation",  "object"),
