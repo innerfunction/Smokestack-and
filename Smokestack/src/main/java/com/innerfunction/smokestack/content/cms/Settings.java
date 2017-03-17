@@ -23,6 +23,7 @@ import com.innerfunction.util.Paths;
  */
 public class Settings {
 
+    public static final String SmokestackService        = "Smokestack";
     public static final String SmokestackAPIVersion     = "0.2";
     public static final String SmokestackAPIRoot        = "semop"; // TODO Change
     public static final String SmokestackAPIProtocol    = "http";
@@ -97,7 +98,7 @@ public class Settings {
     public String getAuthRealm() {
         if( authRealm == null ) {
             String branch = this.branch == null ? "master" : this.branch;
-            authRealm = String.format("Smokestack/%s/%s/%s", account, repo, branch );
+            authRealm = String.format("%s/%s/%s/%s", SmokestackService, account, repo, branch );
         }
         return authRealm;
     }

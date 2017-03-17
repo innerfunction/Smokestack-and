@@ -63,8 +63,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
         this.cms = authority.getCms();
         this.authManager = authority.getAuthManager();
         this.logoutAction = authority.getLogoutAction();
-
-        // Use a copy of the file DB to avoid problems with multi-thread access.
+        this.httpClient = authority.getHttpClient();
         this.fileDB = authority.getFileDB();
 
         // Register command handlers.

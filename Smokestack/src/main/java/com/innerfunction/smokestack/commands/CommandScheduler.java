@@ -77,7 +77,7 @@ public class CommandScheduler implements Service {
 
     public CommandScheduler(Context androidContext) {
         // Instantiate run queue in non-started state.
-        execRunQueue = new RunQueue( toString(), false );
+        execRunQueue = new RunQueue( toString(), RunQueue.StartMode.Manual );
         // Command database setup.
         db = new DB();
         db.setAndroidContext( androidContext );
