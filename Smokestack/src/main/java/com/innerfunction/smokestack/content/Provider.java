@@ -18,8 +18,14 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
+import android.util.Base64;
 import android.util.Log;
 
+import com.innerfunction.http.AuthenticationDelegate;
+import com.innerfunction.http.Client;
+import com.innerfunction.http.Request;
+import com.innerfunction.http.Response;
+import com.innerfunction.q.Q;
 import com.innerfunction.scffld.Message;
 import com.innerfunction.scffld.MessageReceiver;
 import com.innerfunction.scffld.MessageRouter;
@@ -210,6 +216,40 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     @Override
     public void startService() {
         commandScheduler.startService();
+        // Register the HTTP authentication delegate.
+        Client.setGlobalAuthenticationDelegate( new AuthenticationDelegate() {
+            @Override
+            public boolean isAuthenticationChallenge(Client client, Request request, Response response) {
+                return response.getStatusCode() == 401;
+            }
+            @Override
+            public Q.Promise<Response> authenticate(Client client, Request request, Response response) {
+                String method = response.getAuthMethod();
+                String realm = response.getAuthRealm();
+                // Iterate over each content authority until we find one which can return
+                // credentials for the authentication realm.
+                if( "Basic".equals( method ) ) {
+                    URL url = request.getURL();
+                    for( Authority authority : authorities.values() ) {
+                        PasswordAuthentication pa = authority.getPasswordAuthentication( realm, url );
+                        if( pa != null ) {
+                            // Generate the authentication header. Note that the Smokestack server
+                            // allows the fields in the auth token to be URI encoded - this is so
+                            // that colons in either field don't cause a problem when it is parsed.
+                            String username = Uri.encode( pa.getUserName() );
+                            String password = Uri.encode( new String( pa.getPassword() ) );
+                            byte[] authToken = (username+":"+password).getBytes();
+                            String header = "Basic "+Base64.encodeToString( authToken, Base64.NO_WRAP );
+                            // Set the authentication header and return.
+                            request.setHeader("Authorization", header );
+                            return Q.resolve( response );
+                        }
+                    }
+                }
+                // No content authority can be found for the realm, return an error.
+                return Q.reject("No authority found for HTTP authentication realm: "+realm );
+            }
+        } );
         // Register an authenticator for HTTP requests. This delegates password requests to each
         // registered content authority, by iterating over the authorities until one provides
         // credentials.
@@ -224,6 +264,7 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
                         break;
                     }
                 }
+android.util.Log.w("HTTPAUTH","passwordAuthentication="+pa);
                 return pa;
             }
         });
