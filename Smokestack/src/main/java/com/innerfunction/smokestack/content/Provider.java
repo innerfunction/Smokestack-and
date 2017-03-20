@@ -22,6 +22,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.innerfunction.http.AuthenticationDelegate;
+import com.innerfunction.http.BasicAuthenticationDelegate;
 import com.innerfunction.http.Client;
 import com.innerfunction.http.Request;
 import com.innerfunction.http.Response;
@@ -35,7 +36,6 @@ import com.innerfunction.util.Files;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.Map;
@@ -217,55 +217,19 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     public void startService() {
         commandScheduler.startService();
         // Register the HTTP authentication delegate.
-        Client.setGlobalAuthenticationDelegate( new AuthenticationDelegate() {
+        Client.setGlobalAuthenticationDelegate( new BasicAuthenticationDelegate() {
             @Override
-            public boolean isAuthenticationChallenge(Client client, Request request, Response response) {
-                return response.getStatusCode() == 401;
-            }
-            @Override
-            public Q.Promise<Response> authenticate(Client client, Request request, Response response) {
-                String method = response.getAuthMethod();
-                String realm = response.getAuthRealm();
+            public PasswordAuthentication getCredentials(String realm, URL url) {
+                PasswordAuthentication credentials = null;
                 // Iterate over each content authority until we find one which can return
                 // credentials for the authentication realm.
-                if( "Basic".equals( method ) ) {
-                    URL url = request.getURL();
-                    for( Authority authority : authorities.values() ) {
-                        PasswordAuthentication pa = authority.getPasswordAuthentication( realm, url );
-                        if( pa != null ) {
-                            // Generate the authentication header. Note that the Smokestack server
-                            // allows the fields in the auth token to be URI encoded - this is so
-                            // that colons in either field don't cause a problem when it is parsed.
-                            String username = Uri.encode( pa.getUserName() );
-                            String password = Uri.encode( new String( pa.getPassword() ) );
-                            byte[] authToken = (username+":"+password).getBytes();
-                            String header = "Basic "+Base64.encodeToString( authToken, Base64.NO_WRAP );
-                            // Set the authentication header and return.
-                            request.setHeader("Authorization", header );
-                            return Q.resolve( response );
-                        }
-                    }
-                }
-                // No content authority can be found for the realm, return an error.
-                return Q.reject("No authority found for HTTP authentication realm: "+realm );
-            }
-        } );
-        // Register an authenticator for HTTP requests. This delegates password requests to each
-        // registered content authority, by iterating over the authorities until one provides
-        // credentials.
-        Authenticator.setDefault( new Authenticator() {
-            protected PasswordAuthentication getPasswordAuthentication() {
-                PasswordAuthentication pa = null;
-                String authRealm = getRequestingPrompt();
-                URL url = getRequestingURL();
                 for( Authority authority : authorities.values() ) {
-                    pa = authority.getPasswordAuthentication( authRealm, url );
-                    if( pa != null ) {
+                    credentials = authority.getPasswordAuthentication( realm, url );
+                    if( credentials != null ) {
                         break;
                     }
                 }
-android.util.Log.w("HTTPAUTH","passwordAuthentication="+pa);
-                return pa;
+                return credentials;
             }
         });
     }
