@@ -159,7 +159,10 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
 
     /** Logout the current user and remove their stored credentials. */
     public Q.Promise<Boolean> logout() {
+        // Removed stored credentials.
         authManager.removeCredentials();
+        // Clear cached credentials from the HTTP subsystem.
+        getContentProvider().clearCachedCredentialsForAuthRealm( cms.getAuthRealm() );
         return forceRefresh();
     }
 

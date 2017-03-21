@@ -70,6 +70,22 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     private String contentCachePath;
     /** A path for app packaged content. */
     private String packagedContentPath;
+    /** A delegate class handling HTTP Basic authentication. */
+    private BasicAuthenticationDelegate authenticationDelegate = new BasicAuthenticationDelegate() {
+        @Override
+        public PasswordAuthentication getCredentials(String realm, URL url) {
+            PasswordAuthentication credentials = null;
+            // Iterate over each content authority until we find one which can return
+            // credentials for the authentication realm.
+            for( Authority authority : authorities.values() ) {
+                credentials = authority.getPasswordAuthentication( realm, url );
+                if( credentials != null ) {
+                    break;
+                }
+            }
+            return credentials;
+        }
+    };
 
     public Provider(Context context) {
 
@@ -90,6 +106,9 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
         this.contentCachePath = new File( cacheDir, dirName ).getAbsolutePath();
 
         this.packagedContentPath = "/android_asset/"+"packaged-content";
+
+        // Register the HTTP authentication delegate.
+        Client.setGlobalAuthenticationDelegate( authenticationDelegate );
     }
 
     public CommandScheduler getCommandScheduler() {
@@ -169,6 +188,15 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
         return authority;
     }
 
+    /**
+     * Remove any cached authentication credentials for the specified authentication realm.
+     * Part of the logout mechanism.
+     * @param realm An HTTP authentication realm.
+     */
+    public void clearCachedCredentialsForAuthRealm(String realm) {
+        authenticationDelegate.removeAuthTokensForRealm( realm );
+    }
+
     public String getType(Uri uri) {
         Authority authority = getContentAuthority( uri );
         if( authority != null ) {
@@ -216,22 +244,6 @@ public class Provider implements Service, MessageRouter, MessageReceiver {
     @Override
     public void startService() {
         commandScheduler.startService();
-        // Register the HTTP authentication delegate.
-        Client.setGlobalAuthenticationDelegate( new BasicAuthenticationDelegate() {
-            @Override
-            public PasswordAuthentication getCredentials(String realm, URL url) {
-                PasswordAuthentication credentials = null;
-                // Iterate over each content authority until we find one which can return
-                // credentials for the authentication realm.
-                for( Authority authority : authorities.values() ) {
-                    credentials = authority.getPasswordAuthentication( realm, url );
-                    if( credentials != null ) {
-                        break;
-                    }
-                }
-                return credentials;
-            }
-        });
     }
 
     @Override
