@@ -603,27 +603,13 @@ public class DB implements Service, IOCContextAware {
                     else if( cvalue instanceof Boolean ) {
                         cvalues.put( cname, (Boolean)cvalue );
                     }
-                    else {
+                    else if( cvalue != null ) {
                         cvalues.put( cname, cvalue.toString() );
                     }
                 }
             }
         }
         return cvalues;
-    }
-
-    /**
-     * Create and return a new instance of this database connection.
-     * @deprecated This pattern isn't applicable to Android; all client code should reference the
-     * same DB instance. Current implementation of this method returns 'this'.
-     */
-    public DB newInstance() {
-        /*
-        DB db = new DB( this );
-        db.startService();
-        return db;
-        */
-        return this;
     }
 
     /**

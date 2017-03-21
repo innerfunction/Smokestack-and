@@ -186,7 +186,7 @@ public class ORM implements IOCObjectAware {
                     String suffix = cname.substring( idx + 1 );
                     // Ensure that we have a record for the prefix group.
                     Record group = (Record)groups.get( prefix );
-                    if( group != null ) {
+                    if( group == null ) {
                         group = new Record();
                         groups.put( prefix, group );
                     }

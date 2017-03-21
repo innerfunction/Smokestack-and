@@ -24,4 +24,12 @@ import java.util.ArrayList;
  * Created by juliangoacher on 09/03/2017.
  */
 public class ResultSet extends ArrayList<Record> {
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for( Record r : this ) {
+            sb.append( r.toString() ).append('\n');
+        }
+        return sb.toString();
+    }
 }

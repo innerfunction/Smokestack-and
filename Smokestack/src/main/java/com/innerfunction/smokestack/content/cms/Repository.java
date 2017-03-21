@@ -14,6 +14,7 @@
 package com.innerfunction.smokestack.content.cms;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.innerfunction.http.Client;
 import com.innerfunction.http.Response;
@@ -47,6 +48,8 @@ import static com.innerfunction.util.DataLiterals.*;
  * Created by juliangoacher on 09/03/2017.
  */
 public class Repository extends AbstractAuthority implements MessageReceiver {
+
+    static final String Tag = Repository.class.getSimpleName();
 
     /** The content repository settings. */
     private Settings cms;
@@ -143,9 +146,10 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
             .error( new Q.Promise.ErrorCallback() {
                 @Override
                 public void error(Exception e) {
-                    // Authentication failure.
+                    // Connection failure.
+                    Log.e( Tag, "Authenticating", e );
                     authManager.removeCredentials();
-                    promise.reject("Authentication failure");
+                    promise.reject("Connection failure");
                 }
             });
 

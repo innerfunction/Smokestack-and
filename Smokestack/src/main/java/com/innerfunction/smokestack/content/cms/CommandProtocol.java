@@ -115,6 +115,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
             kv("Accept",          AcceptMIMETypes ),
             kv("Accept-Encoding", AcceptEncodings )
         );
+        Log.w( Tag, fileDB.performQuery("select * from files").toString() );
         // Fetch updates from the server.
         final Object _commit = commit, _group = group;
         httpClient.get( refreshURL, params, headers )
@@ -158,7 +159,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
 
                         // Check group fingerprint to see if a migration is needed.
                         String updateGroup = KeyPath.getValueAsString("repository.group", updatesData );
-                        boolean migrate = !_group.equals( updateGroup );
+                        boolean migrate = _group == null || !_group.equals( updateGroup );
                         if( migrate ) {
                             // Performing a migration due to an ACM group ID change; mark all files
                             // as provisionally deleted.
@@ -250,6 +251,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
             })
             .error(new Q.Promise.ErrorCallback() {
                 public void error(Exception e) {
+                    Log.e( Tag, "Updates download", e );
                     String msg = String.format("Updates download from %s failed: %s",
                         refreshURL, e.getMessage() );
                     promise.reject( msg );

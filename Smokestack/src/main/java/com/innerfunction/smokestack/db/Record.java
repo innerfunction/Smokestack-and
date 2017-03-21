@@ -43,4 +43,14 @@ public class Record extends HashMap<String,Object> {
         Object value = get( field );
         return value == null ? null : value.toString();
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[ ");
+        for( String field : keySet() ) {
+            sb.append( field ).append('=').append( get( field ) ).append(' ');
+        }
+        sb.append(']');
+        return sb.toString();
+    }
 }
