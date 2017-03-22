@@ -92,7 +92,7 @@ public class ContentPath {
 
     /** Return a string representation of the full path. */
     public String getFullPath() {
-        String fullPath = TextUtils.join(",", path );
+        String fullPath = TextUtils.join("/", path );
         if( ext != null ) {
             fullPath = fullPath+"."+ext;
         }

@@ -55,20 +55,25 @@ public class ContentProvider extends android.content.ContentProvider {
     /** The content provider's delegate. */
     private Provider provider;
 
+    private Provider getProvider() {
+        if( provider == null ) {
+            provider = AppContainer.getAppContainer().getContentProvider();
+        }
+        return provider;
+    }
+
     @Override
     public boolean onCreate() {
-        AppContainer appContainer = AppContainer.getAppContainer();
-        provider = appContainer.getContentProvider();
-        if( provider == null ) {
-            Log.w( Tag, "Unable to resolve content provider on app container");
-            return false; // This content provider can't be used without the delegate.
-        }
         return true;
     }
 
     @Override
     public ParcelFileDescriptor openFile(Uri uri, String mode, CancellationSignal signal) throws FileNotFoundException {
-        return provider.openFile( uri, signal );
+        Provider provider = getProvider();
+        if( provider != null ) {
+            return provider.openFile( uri, signal );
+        }
+        throw new FileNotFoundException("Content provider not found");
     }
 
     @Override

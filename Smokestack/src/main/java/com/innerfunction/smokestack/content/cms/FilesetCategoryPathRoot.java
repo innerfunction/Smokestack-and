@@ -149,8 +149,8 @@ public class FilesetCategoryPathRoot implements PathRoot {
                 // No specific type converter found. Check if the content file type is compatible
                 // with the requested type and that fileset info is available.
                 String path = content.getValueAsString("path");
-                String ext = Paths.extname( path );
-                if( fileset != null && type.equals( ext ) ) {
+                String ext = Paths.extname( path ); // Note that this includes the leading dot.
+                if( fileset != null && ("."+type).equals( ext ) ) {
                     final String mimeType = null; // TODO
                     String cachePath = fileDB.getCacheLocationForFileRecord( content );
                     final File cacheFile = new File( cachePath );

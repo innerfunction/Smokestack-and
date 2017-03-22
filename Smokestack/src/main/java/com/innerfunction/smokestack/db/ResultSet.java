@@ -13,6 +13,9 @@
 // limitations under the License
 package com.innerfunction.smokestack.db;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONAware;
+
 import java.util.ArrayList;
 
 /**
@@ -23,13 +26,15 @@ import java.util.ArrayList;
  *
  * Created by juliangoacher on 09/03/2017.
  */
-public class ResultSet extends ArrayList<Record> {
+public class ResultSet extends ArrayList<Record> implements JSONAware {
 
+    @Override
+    public String toJSONString() {
+        return JSONArray.toJSONString( this );
+    }
+
+    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for( Record r : this ) {
-            sb.append( r.toString() ).append('\n');
-        }
-        return sb.toString();
+        return toJSONString();
     }
 }

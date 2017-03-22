@@ -13,6 +13,9 @@
 // limitations under the License
 package com.innerfunction.smokestack.db;
 
+import org.json.simple.JSONAware;
+import org.json.simple.JSONObject;
+
 import java.util.HashMap;
 
 /**
@@ -22,7 +25,7 @@ import java.util.HashMap;
  *
  * Created by juliangoacher on 09/03/2017.
  */
-public class Record extends HashMap<String,Object> {
+public class Record extends HashMap<String,Object> implements JSONAware {
 
     /**
      * Return a field value as an integer.
@@ -44,13 +47,13 @@ public class Record extends HashMap<String,Object> {
         return value == null ? null : value.toString();
     }
 
+    @Override
+    public String toJSONString() {
+        return JSONObject.toJSONString( this );
+    }
+
+    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[ ");
-        for( String field : keySet() ) {
-            sb.append( field ).append('=').append( get( field ) ).append(' ');
-        }
-        sb.append(']');
-        return sb.toString();
+        return toJSONString();
     }
 }

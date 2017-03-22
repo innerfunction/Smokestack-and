@@ -194,7 +194,7 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
         // doesn't start with tilde is a direct reference to a file by its path. Convert the
         // reference to a fileset reference by looking up the file ID and category for the path.
         String root = contentPath.getRoot();
-        if( root.charAt( 0 ) == '~' ) {
+        if( root.charAt( 0 ) != '~' ) {
             // Lookup file entry by path.
             String filePath = contentPath.getFullPath();
             ResultSet rs = fileDB.performQuery("SELECT id, category FROM files WHERE path=?", filePath );
