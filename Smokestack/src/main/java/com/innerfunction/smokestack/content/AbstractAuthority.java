@@ -69,6 +69,14 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
         this.refreshInterval = interval;
     }
 
+    public void setPathRoots(Map<String,PathRoot> pathRoots) {
+        this.pathRoots = pathRoots;
+    }
+
+    public void addPathRoot(String pathRootName, PathRoot pathRoot) {
+        pathRoots.put( pathRootName, pathRoot );
+    }
+
     public void setRecordTypes(Map<String,RecordConverter> recordTypes) {
         this.recordTypes = recordTypes;
     }
@@ -91,10 +99,6 @@ public abstract class AbstractAuthority implements Authority, Service, IOCObject
 
     public CommandScheduler getCommandScheduler() {
         return contentProvider.getCommandScheduler();
-    }
-
-    public void addPathRoot(String pathRootName, PathRoot pathRoot) {
-        pathRoots.put( pathRootName, pathRoot );
     }
 
     /**

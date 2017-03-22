@@ -115,7 +115,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
             kv("Accept",          AcceptMIMETypes ),
             kv("Accept-Encoding", AcceptEncodings )
         );
-        Log.w( Tag, fileDB.performQuery("select * from files").toString() );
+        //Log.w( Tag, fileDB.performQuery("select * from files").toString() );
         // Fetch updates from the server.
         final Object _commit = commit, _group = group;
         httpClient.get( refreshURL, params, headers )
