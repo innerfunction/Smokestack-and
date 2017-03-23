@@ -18,19 +18,15 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
-import android.util.Base64;
 import android.util.Log;
 
-import com.innerfunction.http.AuthenticationDelegate;
 import com.innerfunction.http.BasicAuthenticationDelegate;
 import com.innerfunction.http.Client;
-import com.innerfunction.http.Request;
-import com.innerfunction.http.Response;
-import com.innerfunction.q.Q;
 import com.innerfunction.scffld.Message;
 import com.innerfunction.scffld.MessageReceiver;
 import com.innerfunction.scffld.MessageRouter;
 import com.innerfunction.scffld.Service;
+import com.innerfunction.smokestack.ContentProvider;
 import com.innerfunction.smokestack.commands.CommandScheduler;
 import com.innerfunction.util.Files;
 
@@ -46,7 +42,7 @@ import java.util.Map;
  * as a delegate for the Smokestack content provider which is declared in the app manifest. This
  * class in turn delegates requests to content authority instances which are registered with it.
  *
- * @see com.innerfunction.smokestack.ContentProvider
+ * @see ContentProvider
  * @see com.innerfunction.smokestack.AppContainer
  * @see com.innerfunction.smokestack.content.Authority
  *

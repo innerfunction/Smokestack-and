@@ -39,10 +39,15 @@ public class ContentPath {
 
     /** Initialize with a path string. */
     public ContentPath(String path) {
+        // Extract any file extension.
         int idx = path.indexOf('.');
         if( idx > -1 ) {
             ext = path.substring( idx + 1 );
             path = path.substring( 0, idx );
+        }
+        // Strip any leading slash.
+        if( path.charAt( 0 ) == '/' ) {
+            path = path.substring( 1 );
         }
         this.path = Arrays.asList( path.split("/") );
     }

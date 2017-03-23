@@ -66,6 +66,10 @@ public class ContentProvider extends android.content.ContentProvider {
     public boolean onCreate() {
         return true;
     }
+    @Override
+    public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
+        return openFile( uri, mode, null );
+    }
 
     @Override
     public ParcelFileDescriptor openFile(Uri uri, String mode, CancellationSignal signal) throws FileNotFoundException {
@@ -78,17 +82,21 @@ public class ContentProvider extends android.content.ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] args) {
-        throw new UnsupportedOperationException("Op not supported");
+        return 0;
     }
 
     @Override
     public String getType(Uri uri) {
-        return provider.getType( uri );
+        Provider provider = getProvider();
+        if( provider != null ) {
+            return provider.getType( uri );
+        }
+        return "application/binary";
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        throw new UnsupportedOperationException("Op not supported");
+        return uri;
     }
 
     @Override
@@ -103,7 +111,7 @@ public class ContentProvider extends android.content.ContentProvider {
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] args) {
-        throw new UnsupportedOperationException("Op not supported");
+        return 0;
     }
 
 }
