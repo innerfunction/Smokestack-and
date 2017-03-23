@@ -73,6 +73,7 @@ public class ContentProvider extends android.content.ContentProvider {
 
     @Override
     public ParcelFileDescriptor openFile(Uri uri, String mode, CancellationSignal signal) throws FileNotFoundException {
+        Log.d(Tag, String.format("openFile %s", uri ));
         Provider provider = getProvider();
         if( provider != null ) {
             return provider.openFile( uri, signal );

@@ -40,7 +40,7 @@ public class ContentPath {
     /** Initialize with a path string. */
     public ContentPath(String path) {
         // Extract any file extension.
-        int idx = path.indexOf('.');
+        int idx = path.lastIndexOf('.');
         if( idx > -1 ) {
             ext = path.substring( idx + 1 );
             path = path.substring( 0, idx );
