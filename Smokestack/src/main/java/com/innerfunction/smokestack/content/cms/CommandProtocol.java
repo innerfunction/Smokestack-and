@@ -299,8 +299,8 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
             })
             .error(new Q.Promise.ErrorCallback() {
                 public void error(Exception e) {
-                    String msg = String.format("Fileset download from %s failed: %s",
-                        filesetURL, e.getMessage() );
+                    String msg = String.format("Fileset download from %s", filesetURL );
+                    Log.e( Tag, msg, e );
                     promise.reject( msg );
                 }
             });

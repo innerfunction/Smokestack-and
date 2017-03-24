@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 
 /**
@@ -100,7 +101,13 @@ public class ContentScheme implements URIScheme {
                 return new Resource( context, data, uri );
             }
             else if( file != null ) {
-                return new FileResource( context, file, uri );
+                return new FileResource( context, file, uri ) {
+                    @Override
+                    public URI asURL() {
+                        // Use the content URI as the file's URL.
+                        return URI.create( uri.toString() );
+                    }
+                };
             }
             return null;
         }
