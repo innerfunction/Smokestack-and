@@ -24,6 +24,8 @@ import com.innerfunction.smokestack.db.ResultSet;
 import com.innerfunction.smokestack.db.Table;
 import com.innerfunction.util.RunQueue;
 
+import static com.innerfunction.util.DataLiterals.*;
+
 import org.json.simple.JSONValue;
 
 import java.util.ArrayList;
@@ -227,13 +229,20 @@ public class CommandScheduler implements Service {
         currentBatch = 0;
         Runnable purge = new Runnable() {
             public void run() {
-                if( deleteExecutedQueueRecords ) {
-                    db.deleteWhere("queue", "1=1" );
+                db.beginTransaction();
+                try {
+                    if( deleteExecutedQueueRecords ) {
+                        db.deleteWhere("queue", "1=1" );
+                    }
+                    else {
+                        db.performUpdate("UPDATE queue SET status='X' WHERE status='P'" );
+                    }
+                    db.commitTransaction();
                 }
-                else {
-                    db.performUpdate("UPDATE queue SET status='X' WHERE status='P'");
+                catch(Exception e) {
+                    db.rollbackTransaction();
+                    Log.e(Tag,"Purging queue", e );
                 }
-                db.commitTransaction();
             }
         };
         // If already running on the exec queue the run the purge synchronously; else add to end of
@@ -252,14 +261,21 @@ public class CommandScheduler implements Service {
         execIdx = 0;
         Runnable purge = new Runnable() {
             public void run() {
-                String batch = String.valueOf( currentBatch );
-                if( deleteExecutedQueueRecords ) {
-                    db.deleteWhere("queue", "batch=?", batch );
+                db.beginTransaction();
+                try {
+                    String batch = String.valueOf( currentBatch );
+                    if( deleteExecutedQueueRecords ) {
+                        db.deleteWhere("queue", "batch=?", batch );
+                    }
+                    else {
+                        db.performUpdate("UPDATE queue SET status='X' WHERE status='P' AND batch=?", batch );
+                    }
+                    db.commitTransaction();
                 }
-                else {
-                    db.performUpdate("UPDATE queue SET status='X' WHERE status='P' AND batch=?", batch );
+                catch(Exception e) {
+                    db.rollbackTransaction();
+                    Log.e(Tag, "Purging batch", e );
                 }
-                db.commitTransaction();
             }
         };
         // If already running on the exec queue the run the purge synchronously; else add to end of
@@ -307,39 +323,47 @@ public class CommandScheduler implements Service {
                                 public void run() {
                                     // Queue any new commands, delete current command from db.
                                     db.beginTransaction();
-                                    for( CommandItem command : commands ) {
-                                        // Check for system commands.
-                                        if("control.purge-queue".equals( command.name ) ) {
-                                            purgeQueue();
-                                            continue;
-                                        }
-                                        if("control.purge-current-batch".equals( command.name ) ) {
-                                            purgeCurrentBatch();
-                                            continue;
-                                        }
-                                        int batch = currentBatch;
-                                        if( command.priority != null ) {
-                                            batch += command.priority;
-                                            // Negative priorities can place new commands at the head
-                                            // of the queue; reset the exec queue to force a db read,
-                                            // so that these commands are read into the head of the
-                                            // exec queue.
-                                            if( batch < currentBatch ) {
-                                                execQueue.clear();
+                                    try {
+                                        for( CommandItem command : commands ) {
+                                            // Check for system commands.
+                                            if( "control.purge-queue".equals( command.name ) ) {
+                                                purgeQueue();
+                                                continue;
                                             }
+                                            if( "control.purge-current-batch".equals( command.name ) ) {
+                                                purgeCurrentBatch();
+                                                continue;
+                                            }
+                                            int batch = currentBatch;
+                                            if( command.priority != null ) {
+                                                batch += command.priority;
+                                                // Negative priorities can place new commands at the head
+                                                // of the queue; reset the exec queue to force a db read,
+                                                // so that these commands are read into the head of the
+                                                // exec queue.
+                                                if( batch < currentBatch ) {
+                                                    execQueue.clear();
+                                                }
+                                            }
+                                            Log.d( Tag, String.format("Appending %s %s", command.name, command.args ) );
+                                            Map<String, Object> values = m(
+                                                kv("batch",     batch ),
+                                                kv("command",   command.name ),
+                                                kv("args",      JSONValue.toJSONString( command.args ) ),
+                                                kv("status",    "P")
+                                            );
+                                            db.insert("queue", values );
                                         }
-                                        Log.d( Tag, String.format("Appending %s %s", command.name, command.args ) );
-                                        Map<String, Object> values = new HashMap<>();
-                                        values.put("batch", batch );
-                                        values.put("command", command.name );
-                                        values.put("args", JSONValue.toJSONString( command.args ) );
-                                        values.put("status", "P" );
-                                        db.insert("queue", values );
+                                        db.commitTransaction();
+                                        continueQueueProcessingAfterCommand( commandItem.rowID );
+                                        // Resolve command item promise, if any.
+                                        if( commandItem.promise != null ) {
+                                            commandItem.promise.resolve( true );
+                                        }
                                     }
-                                    continueQueueProcessingAfterCommand( commandItem.rowID );
-                                    // Resolve command item promise, if any.
-                                    if( commandItem.promise != null ) {
-                                        commandItem.promise.resolve( true );
+                                    catch(Exception e) {
+                                        db.rollbackTransaction();
+                                        throw e;
                                     }
                                 }
                             } );
@@ -367,19 +391,25 @@ public class CommandScheduler implements Service {
     /** Continue queue processing after execution a command. */
     private void continueQueueProcessingAfterCommand(String rowID) {
         db.beginTransaction();
-        // Delete the command record from the queue.
-        if( deleteExecutedQueueRecords ) {
-            db.delete("queue", rowID );
+        try {
+            // Delete the command record from the queue.
+            if( deleteExecutedQueueRecords ) {
+                db.delete( "queue", rowID );
+            }
+            else {
+                Map<String, Object> values = new HashMap<>();
+                values.put( "id", rowID );
+                values.put( "status", "X" );
+                db.update( "queue", values );
+            }
+            db.commitTransaction();
+            // Continue to next queued command.
+            executeNextCommand();
         }
-        else {
-            Map<String,Object> values = new HashMap<>();
-            values.put("id", rowID );
-            values.put("status", "X");
-            db.update("queue", values );
+        catch(Exception e) {
+            Log.e(Tag, "Continuing queue processing", e );
+            db.rollbackTransaction();
         }
-        db.commitTransaction();
-        // Continue to next queued command.
-        executeNextCommand();
     }
 
     /**

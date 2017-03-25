@@ -76,7 +76,7 @@ public class AuthenticationManager {
 
     /** Check whether any user credentials are stored. */
     public boolean hasCredentials() {
-        return userDefaults.get("username") != null && userDefaults.get("password") != null;
+        return passwordAuth != null;
     }
 
     /** Return user credentials as a PasswordAuthentication instance. */

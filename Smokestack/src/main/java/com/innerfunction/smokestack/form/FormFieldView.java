@@ -28,6 +28,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.innerfunction.scffld.app.ViewController;
+import com.innerfunction.scffld.ui.Padding;
 import com.innerfunction.smokestack.R;
 import com.innerfunction.util.Display;
 
@@ -64,6 +65,8 @@ public class FormFieldView extends FrameLayout {
     private Drawable focusedBackgroundImage;
     /** The field's title. */
     private String title;
+    /** The field view's padding. */
+    private Padding padding;
 
     /** A list of all the fields in this field's group. */
     private List<FormFieldView> fieldGroup;
@@ -83,8 +86,7 @@ public class FormFieldView extends FrameLayout {
     public FormFieldView(Context context) {
         super( context );
 
-        int padding = Display.dpToPx( 5 );
-        setPadding( padding, padding, padding, padding );
+        setPadding( new Padding( 5, 5 ) );
 
         LayoutInflater inflater = LayoutInflater.from( context );
         this.cellLayout = inflater.inflate( R.layout.formfield_cell_layout, this, false );
@@ -96,7 +98,8 @@ public class FormFieldView extends FrameLayout {
         this.labelPanel = makeLabelPanel( context );
         // Adding additional padding to the bottom and right  of the label panel improves the
         // overall look of form layouts.
-        labelPanel.setPadding( 0, 0, padding, padding );
+        int labelPadding = Display.dpToPx( 5 );
+        labelPanel.setPadding( 0, 0, labelPadding, labelPadding );
         this.valueLabel.setVisibility( INVISIBLE );
         setMainView( labelPanel );
 
@@ -334,4 +337,16 @@ public class FormFieldView extends FrameLayout {
     public List<FormFieldView> getFieldGroup() {
         return fieldGroup;
     }
+
+    public Padding getPadding() {
+        return padding;
+    }
+
+    public void setPadding(Padding padding) {
+        this.padding = padding;
+        int horizontal = Display.dpToPx( padding.getHorizontal() );
+        int vertical = Display.dpToPx( padding.getVertical() );
+        setPadding( horizontal, vertical, horizontal, vertical );
+    }
+
 }

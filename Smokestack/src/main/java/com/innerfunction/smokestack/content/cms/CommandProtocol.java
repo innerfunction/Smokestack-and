@@ -156,93 +156,97 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
 
                         // Start a DB transaction.
                         fileDB.beginTransaction();
+                        try {
+                            // Check group fingerprint to see if a migration is needed.
+                            String updateGroup = KeyPath.getValueAsString( "repository.group", updatesData );
+                            boolean migrate = _group == null || !_group.equals( updateGroup );
+                            if( migrate ) {
+                                // Performing a migration due to an ACM group ID change; mark all files
+                                // as provisionally deleted.
+                                fileDB.performUpdate( "UPDATE files SET status='deleted'" );
+                            }
+                            // Shift current fileset fingerprints to previous.
+                            fileDB.performUpdate( "UPDATE fingerprints SET previous=current" );
 
-                        // Check group fingerprint to see if a migration is needed.
-                        String updateGroup = KeyPath.getValueAsString("repository.group", updatesData );
-                        boolean migrate = _group == null || !_group.equals( updateGroup );
-                        if( migrate ) {
-                            // Performing a migration due to an ACM group ID change; mark all files
-                            // as provisionally deleted.
-                            fileDB.performUpdate("UPDATE files SET status='deleted'");
-                        }
-                        // Shift current fileset fingerprints to previous.
-                        fileDB.performUpdate("UPDATE fingerprints SET previous=current");
-
-                        // Apply all downloaded updates to the database.
-                        for( String tableName : updates.keySet() ) {
-                            boolean isFilesTable = "files".equals( tableName );
-                            List<Map<String,Object>> table = (List<Map<String,Object>>)updates.get( tableName );
-                            for( Map<String,Object> values : table ) {
-                                fileDB.upsert( tableName, values );
-                                // If processing the files table then record the updated file
-                                // category name.
-                                if( isFilesTable ) {
-                                    String category = KeyPath.getValueAsString("category", values );
-                                    String status = KeyPath.getValueAsString("status", values );
-                                    if( category != null && !"deleted".equals( status ) ) {
-                                        if( _commit != null ) {
-                                            updatedCategories.put( category, _commit );
-                                        }
-                                        else {
-                                            updatedCategories.put( category, NullCategory );
+                            // Apply all downloaded updates to the database.
+                            for( String tableName : updates.keySet() ) {
+                                boolean isFilesTable = "files".equals( tableName );
+                                List<Map<String, Object>> table = (List<Map<String, Object>>)updates.get( tableName );
+                                for( Map<String, Object> values : table ) {
+                                    fileDB.upsert( tableName, values );
+                                    // If processing the files table then record the updated file
+                                    // category name.
+                                    if( isFilesTable ) {
+                                        String category = KeyPath.getValueAsString( "category", values );
+                                        String status = KeyPath.getValueAsString( "status", values );
+                                        if( category != null && !"deleted".equals( status ) ) {
+                                            if( _commit != null ) {
+                                                updatedCategories.put( category, _commit );
+                                            }
+                                            else {
+                                                updatedCategories.put( category, NullCategory );
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        // Check for deleted files.
-                        ResultSet deleted = fileDB.performQuery("SELECT id, path FROM files WHERE status='deleted'");
-                        for( Record record : deleted ) {
-                            // Delete cached file, if exists.
-                            String path = fileDB.getCacheLocationForFileRecord( record );
-                            if( path != null ) {
-                                File cacheFile = new File( path );
-                                cacheFile.delete();
-                            }
-                        }
-
-                        // Delete obsolete records.
-                        fileDB.performUpdate("DELETE FROM files WHERE status='deleted'");
-
-                        // Prune ORM related records.
-                        fileDB.pruneRelatedValues();
-
-                        // Read list of fileset names with modified fingerprints.
-                        ResultSet rs = fileDB.performQuery("SELECT category FROM fingerprints WHERE current != previous");
-                        for( Record record : rs ) {
-                            String category = record.getValueAsString("category");
-                            if( "$group".equals( category ) ) {
-                                // The ACM group fingerprint entry - skip.
-                                continue;
-                            }
-                            // Map the category name to null - this indicates that the category is
-                            // updated, but there is no 'since' parameter, so download a full
-                            // update.
-                            updatedCategories.put( category, NullCategory );
-                        }
-
-                        // Queue downloads of updated category filesets.
-                        String command = CommandProtocol.this.getQualifiedCommandName("download-fileset");
-                        for( String category : updatedCategories.keySet() ) {
-                            Object since = updatedCategories.get( category );
-                            // Get cache location for fileset; if nil then don't download the
-                            // fileset.
-                            String cacheLocation = fileDB.getCacheLocationForFileset( category );
-                            if( cacheLocation != null ) {
-                                List<String> args = new ArrayList<>();
-                                args.add( category );
-                                args.add( cacheLocation );
-                                if( since != NullCategory ) {
-                                    args.add( since.toString() );
+                            // Check for deleted files.
+                            ResultSet deleted = fileDB.performQuery( "SELECT id, path FROM files WHERE status='deleted'" );
+                            for( Record record : deleted ) {
+                                // Delete cached file, if exists.
+                                String path = fileDB.getCacheLocationForFileRecord( record );
+                                if( path != null ) {
+                                    File cacheFile = new File( path );
+                                    cacheFile.delete();
                                 }
-                                commands.addCommand( command, args );
                             }
+
+                            // Delete obsolete records.
+                            fileDB.performUpdate( "DELETE FROM files WHERE status='deleted'" );
+
+                            // Prune ORM related records.
+                            fileDB.pruneRelatedValues();
+
+                            // Read list of fileset names with modified fingerprints.
+                            ResultSet rs = fileDB.performQuery( "SELECT category FROM fingerprints WHERE current != previous" );
+                            for( Record record : rs ) {
+                                String category = record.getValueAsString( "category" );
+                                if( "$group".equals( category ) ) {
+                                    // The ACM group fingerprint entry - skip.
+                                    continue;
+                                }
+                                // Map the category name to null - this indicates that the category is
+                                // updated, but there is no 'since' parameter, so download a full
+                                // update.
+                                updatedCategories.put( category, NullCategory );
+                            }
+
+                            // Queue downloads of updated category filesets.
+                            String command = CommandProtocol.this.getQualifiedCommandName( "download-fileset" );
+                            for( String category : updatedCategories.keySet() ) {
+                                Object since = updatedCategories.get( category );
+                                // Get cache location for fileset; if nil then don't download the
+                                // fileset.
+                                String cacheLocation = fileDB.getCacheLocationForFileset( category );
+                                if( cacheLocation != null ) {
+                                    List<String> args = new ArrayList<>();
+                                    args.add( category );
+                                    args.add( cacheLocation );
+                                    if( since != NullCategory ) {
+                                        args.add( since.toString() );
+                                    }
+                                    commands.addCommand( command, args );
+                                }
+                            }
+
+                            // Commit the transaction.
+                            fileDB.commitTransaction();
                         }
-
-                        // Commit the transaction.
-                        fileDB.commitTransaction();
-
+                        catch(Exception e) {
+                            fileDB.rollbackTransaction();
+                            throw e;
+                        }
                     }
 
                     promise.resolve( commands );
@@ -299,7 +303,7 @@ public class CommandProtocol extends com.innerfunction.smokestack.commands.Comma
             })
             .error(new Q.Promise.ErrorCallback() {
                 public void error(Exception e) {
-                    String msg = String.format("Fileset download from %s", filesetURL );
+                    String msg = String.format("Fileset download from %s failed", filesetURL );
                     Log.e( Tag, msg, e );
                     promise.reject( msg );
                 }
