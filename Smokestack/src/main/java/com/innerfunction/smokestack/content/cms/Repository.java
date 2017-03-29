@@ -117,7 +117,7 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
         if( password == null ) {
             return Q.reject("Missing password");
         }
-        final Q.Promise promise = new Q.Promise<>();
+        final Q.Promise<Boolean> promise = new Q.Promise<>();
         // Register with the auth manager.
         authManager.registerCredentials( credentials );
         // Authenticate against the backend.
@@ -133,7 +133,22 @@ public class Repository extends AbstractAuthority implements MessageReceiver {
                         authenticated = KeyPath.getValueAsBoolean("authenticated", data );
                     }
                     if( authenticated ) {
-                        promise.resolve( forceRefresh() );
+                        forceRefresh()
+                            .then( new Q.Promise.Callback<Boolean,Void>() {
+                                @Override
+                                public Void result(Boolean result) {
+                                    promise.resolve( result );
+                                    return null;
+                                }
+                            })
+                            .error( new Q.Promise.ErrorCallback() {
+                                @Override
+                                public void error(Exception e) {
+                                    Log.e(Tag,"Force refresh", e );
+                                    authManager.removeCredentials();
+                                    promise.reject("Refresh failure");
+                                }
+                            });
                     }
                     else {
                         // Authentication failure.
